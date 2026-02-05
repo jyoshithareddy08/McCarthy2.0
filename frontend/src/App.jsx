@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import LLMs from "./pages/LLMs";
+import ModelDetail from "./pages/ModelDetail";
 import Playground from "./pages/Playground";
 import Pipelines from "./pages/Pipelines";
 import SharedPipeline from "./pages/SharedPipeline";
@@ -79,6 +80,7 @@ export default function App() {
             }
           />
           <Route path="/llms" element={<Layout><LLMs /></Layout>} />
+          <Route path="/llms/:id" element={<Layout><ModelDetail /></Layout>} />
           <Route path="/playground" element={<Layout><Playground /></Layout>} />
           <Route 
             path="/pipelines" 

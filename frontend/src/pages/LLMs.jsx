@@ -1,14 +1,22 @@
 import { useState, useMemo, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Cpu, Zap, MessageSquare, Loader2 } from "lucide-react";
+import { Search, Cpu, MessageSquare, Star, Heart, Loader2 } from "lucide-react";
 import AnimatedBackground from "../components/AnimatedBackground";
 import { api } from "../utils/api";
 
-const SORT_OPTIONS = ["Name", "Provider", "Context size", "Newest", "Price"];
+const SORT_OPTIONS = ["Name", "Provider", "Newest", "Price"];
 const PROVIDERS = ["All", "OpenAI", "Anthropic", "Google", "Mistral", "Meta", "Stability"];
 const CAPABILITIES = ["All", "Chat", "Completion", "Vision", "Function calling"];
-const CATEGORIES = ["All", "Text", "Image", "Business", "Finance", "3D Modelling", "Code", "Data", "Marketing", "Research"];
+const CATEGORIES = [
+  "Text", "Image", "Business", "Finance", "3D Modelling", "Code", "Data", "Marketing", "Research",
+  "Legal", "Healthcare", "Education", "Creative Writing", "Translation", "Summarization", "Analytics",
+  "Customer Support", "Sales", "Design", "Video", "Audio", "Scientific", "Gaming",
+];
+const INITIAL_CATEGORIES_VISIBLE = 6;
 const PRICE_OPTIONS = ["All", "Free", "Basic", "Pro", "Enterprise"];
+
+const FAVOURITES_KEY = "llm-favourites";
 
 // Helper function to capitalize provider name
 const capitalizeProvider = (provider) => {
@@ -79,16 +87,12 @@ const determineTier = (title = "", provider = "") => {
 // Helper function to extract context size from model name or use default
 const extractContext = (models = []) => {
   if (!models || models.length === 0) return "—";
-  
-  // Try to extract context from model names
   const modelStr = models.join(" ").toLowerCase();
   if (modelStr.includes("1m") || modelStr.includes("1000000")) return "1M";
   if (modelStr.includes("200k") || modelStr.includes("200000")) return "200K";
   if (modelStr.includes("128k") || modelStr.includes("128000")) return "128K";
   if (modelStr.includes("32k") || modelStr.includes("32000")) return "32K";
   if (modelStr.includes("8k") || modelStr.includes("8000")) return "8K";
-  
-  // Default context sizes based on provider/model type
   return "128K";
 };
 
@@ -97,11 +101,38 @@ export default function LLMs() {
   const [sort, setSort] = useState("Name");
   const [provider, setProvider] = useState("All");
   const [capability, setCapability] = useState("All");
-  const [category, setCategory] = useState("All");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   const [price, setPrice] = useState("All");
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [favourites, setFavourites] = useState(() => {
+    try {
+      const raw = localStorage.getItem(FAVOURITES_KEY);
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  const toggleFavourite = (modelId) => {
+    setFavourites((prev) => {
+      const next = new Set(prev);
+      if (next.has(modelId)) next.delete(modelId);
+      else next.add(modelId);
+      try {
+        localStorage.setItem(FAVOURITES_KEY, JSON.stringify([...next]));
+      } catch (_) {}
+      return next;
+    });
+  };
+
+  const toggleCategory = (cat) => {
+    setSelectedCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
+  };
 
   // Transform database tools to UI model format
   const transformTools = (tools) => {
@@ -171,18 +202,18 @@ export default function LLMs() {
     if (provider !== "All") list = list.filter((m) => m.provider === provider);
     if (capability !== "All")
       list = list.filter((m) => m.capability.toLowerCase().includes(capability.toLowerCase()));
-    if (category !== "All") list = list.filter((m) => m.category === category);
+    if (selectedCategories.length > 0)
+      list = list.filter((m) => selectedCategories.includes(m.category));
     if (price !== "All") list = list.filter((m) => m.price === price);
     
     // Apply sorting
     if (sort === "Name") list.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "Provider") list.sort((a, b) => a.provider.localeCompare(b.provider));
-    if (sort === "Context size") list.sort((a, b) => String(b.context).localeCompare(String(a.context)));
     if (sort === "Newest") list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     if (sort === "Price") list.sort((a, b) => PRICE_OPTIONS.indexOf(a.price) - PRICE_OPTIONS.indexOf(b.price));
     
     return list;
-  }, [models, sort, provider, capability, category, price]);
+  }, [models, sort, provider, capability, selectedCategories, price]);
 
   return (
     <div className="relative min-h-screen">
@@ -200,13 +231,48 @@ export default function LLMs() {
         </motion.div>
 
         <div className="mt-8 flex flex-col gap-6 lg:flex-row">
-          {/* Sidebar filters */}
+          {/* Sidebar filters - Category on top with multi-select + Show more */}
           <motion.aside
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="lg:w-56 shrink-0 space-y-4"
+            className="lg:w-64 shrink-0 space-y-4"
           >
+            <div>
+              <label className="block text-sm font-semibold text-zinc-400 mb-2">Category</label>
+              <div className="flex flex-wrap gap-2">
+                {(categoriesExpanded ? CATEGORIES : CATEGORIES.slice(0, INITIAL_CATEGORIES_VISIBLE)).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => toggleCategory(c)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      selectedCategories.includes(c)
+                        ? "bg-primary-500/30 text-primary-200 border border-primary-500/50"
+                        : "bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 hover:text-zinc-200"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setCategoriesExpanded((e) => !e)}
+                className="mt-2 text-xs font-medium text-primary-400 hover:text-primary-300 transition-colors"
+              >
+                {categoriesExpanded ? "Show less" : "Show more"}
+              </button>
+              {selectedCategories.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategories([])}
+                  className="mt-1 ml-0 block text-xs text-zinc-500 hover:text-zinc-300"
+                >
+                  Clear selection
+                </button>
+              )}
+            </div>
             <div>
               <label className="block text-sm font-medium text-zinc-400">Provider</label>
               <select
@@ -229,20 +295,6 @@ export default function LLMs() {
                 className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-3 pr-8 text-zinc-200 focus:border-primary-500 focus:outline-none"
               >
                 {CAPABILITIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-400">Category</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-3 pr-8 text-zinc-200 focus:border-primary-500 focus:outline-none"
-              >
-                {CATEGORIES.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
@@ -314,39 +366,64 @@ export default function LLMs() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    whileHover={{ y: -2 }}
-                    className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 hover:border-primary-500/30 hover:bg-white/[0.06] transition-colors"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500/20">
-                          <Cpu className="h-5 w-5 text-primary-400" />
+                    <Link
+                      to={`/llms/${model.id}`}
+                      className="group block rounded-2xl border border-white/10 bg-white/[0.03] p-5 hover:border-primary-500/30 hover:bg-white/[0.06] transition-colors hover:-translate-y-0.5"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex gap-3 min-w-0 flex-1">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500/20">
+                            <Cpu className="h-5 w-5 text-primary-400" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold text-white">{model.name}</h3>
+                            <p className="text-sm text-zinc-500">{model.provider}</p>
+                            {model.description && (
+                              <p className="mt-1 text-xs text-zinc-500 line-clamp-1" title={model.description}>{model.description}</p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-white">{model.name}</h3>
-                          <p className="text-sm text-zinc-500">{model.provider}</p>
+                        <div className="flex shrink-0 items-start gap-1.5">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavourite(model.id); }}
+                            className={`p-1 rounded-lg transition-colors ${favourites.has(model.id) ? "text-red-400" : "text-zinc-500 hover:text-red-400"} hover:bg-white/5`}
+                            aria-label={favourites.has(model.id) ? "Remove from favourites" : "Add to favourites"}
+                          >
+                            <Heart
+                              className="h-5 w-5"
+                              fill={favourites.has(model.id) ? "currentColor" : "none"}
+                              strokeWidth={1.5}
+                            />
+                          </button>
+                          <span className="rounded-full bg-primary-500/20 px-2.5 py-0.5 text-xs font-medium text-primary-300">
+                            {model.tier}
+                          </span>
                         </div>
                       </div>
-                      <span className="rounded-full bg-primary-500/20 px-2.5 py-0.5 text-xs font-medium text-primary-300">
-                        {model.tier}
-                      </span>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-3 text-sm text-zinc-400">
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="h-3.5 w-3.5" /> {model.capability}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Zap className="h-3.5 w-3.5" /> {model.context} context
-                      </span>
-                    </div>
-                    <motion.button
-                      type="button"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="mt-4 w-full rounded-lg border border-white/10 py-2 text-sm font-medium text-zinc-300 hover:border-primary-500/50 hover:text-primary-400 transition-colors"
-                    >
-                      Use in Playground
-                    </motion.button>
+                      <div className="mt-3 flex items-center gap-2 text-sm">
+                        <div className="flex items-center gap-1 text-amber-400">
+                          <Star className="h-4 w-4 fill-current" />
+                          <span className="font-medium text-zinc-300">{model.rating ?? "—"}</span>
+                        </div>
+                        {model.reviewCount != null && (
+                          <span className="text-zinc-500">({model.reviewCount.toLocaleString()} reviews)</span>
+                        )}
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-3 text-sm text-zinc-400">
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="h-3.5 w-3.5" /> {model.capability}
+                        </span>
+                      </div>
+                      <Link
+                        to="/playground"
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-4 block w-full rounded-lg border border-white/10 py-2 text-center text-sm font-medium text-zinc-300 hover:border-primary-500/50 hover:text-primary-400 transition-colors"
+                      >
+                        Use in Playground
+                      </Link>
+                    </Link>
                   </motion.div>
                   ))}
                 </AnimatePresence>
