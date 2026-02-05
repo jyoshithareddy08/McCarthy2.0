@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Cpu, Zap, MessageSquare } from "lucide-react";
+import { Search, Cpu, Zap, MessageSquare, Loader2 } from "lucide-react";
 import AnimatedBackground from "../components/AnimatedBackground";
+import { api } from "../utils/api";
 
 const SORT_OPTIONS = ["Name", "Provider", "Context size", "Newest", "Price"];
 const PROVIDERS = ["All", "OpenAI", "Anthropic", "Google", "Mistral", "Meta", "Stability"];
@@ -9,18 +10,87 @@ const CAPABILITIES = ["All", "Chat", "Completion", "Vision", "Function calling"]
 const CATEGORIES = ["All", "Text", "Image", "Business", "Finance", "3D Modelling", "Code", "Data", "Marketing", "Research"];
 const PRICE_OPTIONS = ["All", "Free", "Basic", "Pro", "Enterprise"];
 
-const mockModels = [
-  { id: "1", name: "GPT-4o", provider: "OpenAI", context: "128K", capability: "Chat, Vision", tier: "Pro", category: "Text", price: "Pro" },
-  { id: "2", name: "Claude 3.5 Sonnet", provider: "Anthropic", context: "200K", capability: "Chat, Vision", tier: "Pro", category: "Text", price: "Pro" },
-  { id: "3", name: "Gemini 1.5 Pro", provider: "Google", context: "1M", capability: "Chat, Vision", tier: "Pro", category: "Text", price: "Pro" },
-  { id: "4", name: "GPT-4o mini", provider: "OpenAI", context: "128K", capability: "Chat", tier: "Basic", category: "Text", price: "Basic" },
-  { id: "5", name: "Claude 3 Haiku", provider: "Anthropic", context: "200K", capability: "Chat", tier: "Basic", category: "Text", price: "Basic" },
-  { id: "6", name: "Llama 3.1 70B", provider: "Meta", context: "128K", capability: "Completion", tier: "Pro", category: "Code", price: "Pro" },
-  { id: "7", name: "Mistral Large", provider: "Mistral", context: "128K", capability: "Chat, Function calling", tier: "Pro", category: "Business", price: "Pro" },
-  { id: "8", name: "DALL-E 3", provider: "OpenAI", context: "—", capability: "Image", tier: "Pro", category: "Image", price: "Pro" },
-  { id: "9", name: "Stable Diffusion", provider: "Stability", context: "—", capability: "Image", tier: "Basic", category: "Image", price: "Basic" },
-  { id: "10", name: "Finance GPT", provider: "OpenAI", context: "128K", capability: "Chat", tier: "Pro", category: "Finance", price: "Enterprise" },
-];
+// Helper function to capitalize provider name
+const capitalizeProvider = (provider) => {
+  if (!provider) return "Custom";
+  const providerMap = {
+    openai: "OpenAI",
+    anthropic: "Anthropic",
+    google: "Google",
+    mistral: "Mistral",
+    meta: "Meta",
+    stability: "Stability",
+    custom: "Custom"
+  };
+  return providerMap[provider.toLowerCase()] || provider.charAt(0).toUpperCase() + provider.slice(1);
+};
+
+// Helper function to extract capabilities from useCases and keywords
+const extractCapabilities = (useCases = [], keywords = []) => {
+  const allText = [...useCases, ...keywords].join(" ").toLowerCase();
+  const capabilities = [];
+  
+  if (allText.includes("chat") || allText.includes("conversation") || allText.includes("message")) {
+    capabilities.push("Chat");
+  }
+  if (allText.includes("image") || allText.includes("vision") || allText.includes("visual")) {
+    capabilities.push("Vision");
+  }
+  if (allText.includes("function") || allText.includes("tool")) {
+    capabilities.push("Function calling");
+  }
+  if (allText.includes("completion") || allText.includes("text generation")) {
+    capabilities.push("Completion");
+  }
+  
+  return capabilities.length > 0 ? capabilities.join(", ") : "Chat";
+};
+
+// Helper function to extract category from keywords and useCases
+const extractCategory = (keywords = [], useCases = []) => {
+  const allText = [...keywords, ...useCases].join(" ").toLowerCase();
+  
+  if (allText.includes("image") || allText.includes("visual") || allText.includes("art")) return "Image";
+  if (allText.includes("finance") || allText.includes("financial")) return "Finance";
+  if (allText.includes("code") || allText.includes("programming")) return "Code";
+  if (allText.includes("business") || allText.includes("enterprise")) return "Business";
+  if (allText.includes("data") || allText.includes("analytics")) return "Data";
+  if (allText.includes("marketing") || allText.includes("advertising")) return "Marketing";
+  if (allText.includes("research") || allText.includes("academic")) return "Research";
+  
+  return "Text";
+};
+
+// Helper function to determine tier/price from model name or provider
+const determineTier = (title = "", provider = "") => {
+  const titleLower = title.toLowerCase();
+  if (titleLower.includes("mini") || titleLower.includes("haiku") || titleLower.includes("basic")) {
+    return "Basic";
+  }
+  if (titleLower.includes("enterprise") || titleLower.includes("pro max")) {
+    return "Enterprise";
+  }
+  if (titleLower.includes("pro") || titleLower.includes("opus") || titleLower.includes("sonnet")) {
+    return "Pro";
+  }
+  return "Basic";
+};
+
+// Helper function to extract context size from model name or use default
+const extractContext = (models = []) => {
+  if (!models || models.length === 0) return "—";
+  
+  // Try to extract context from model names
+  const modelStr = models.join(" ").toLowerCase();
+  if (modelStr.includes("1m") || modelStr.includes("1000000")) return "1M";
+  if (modelStr.includes("200k") || modelStr.includes("200000")) return "200K";
+  if (modelStr.includes("128k") || modelStr.includes("128000")) return "128K";
+  if (modelStr.includes("32k") || modelStr.includes("32000")) return "32K";
+  if (modelStr.includes("8k") || modelStr.includes("8000")) return "8K";
+  
+  // Default context sizes based on provider/model type
+  return "128K";
+};
 
 export default function LLMs() {
   const [search, setSearch] = useState("");
@@ -29,28 +99,90 @@ export default function LLMs() {
   const [capability, setCapability] = useState("All");
   const [category, setCategory] = useState("All");
   const [price, setPrice] = useState("All");
+  const [models, setModels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Transform database tools to UI model format
+  const transformTools = (tools) => {
+    return tools.map((tool) => ({
+      id: tool._id || tool.id,
+      name: tool.title || "Untitled Model",
+      provider: capitalizeProvider(tool.provider),
+      context: extractContext(tool.models),
+      capability: extractCapabilities(tool.useCases, tool.keywords),
+      tier: determineTier(tool.title, tool.provider),
+      category: extractCategory(tool.keywords, tool.useCases),
+      price: determineTier(tool.title, tool.provider), // Using tier as price for now
+      createdAt: tool.createdAt || new Date()
+    }));
+  };
+
+  // Fetch models from API - use search endpoint if search query exists, otherwise get all
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        let response;
+        if (search.trim()) {
+          // Use search endpoint with FastAPI similarity service
+          response = await api.request("/api/llms/search", {
+            method: "POST",
+            body: JSON.stringify({ query: search.trim() })
+          });
+        } else {
+          // Get all models
+          response = await api.request("/api/llms");
+        }
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch models");
+        }
+        
+        const data = await response.json();
+        const tools = data.results || [];
+        
+        const transformedModels = transformTools(tools);
+        setModels(transformedModels);
+      } catch (err) {
+        console.error("Error fetching models:", err);
+        setError("Failed to load models. Please try again.");
+        setModels([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    // Debounce search to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      fetchModels();
+    }, search.trim() ? 300 : 0); // Only debounce when there's a search query
+    
+    return () => clearTimeout(timeoutId);
+  }, [search]);
+
+  // Apply dropdown filters and sorting (client-side for UI-specific filters)
   const filtered = useMemo(() => {
-    let list = [...mockModels];
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (m) =>
-          m.name.toLowerCase().includes(q) ||
-          m.provider.toLowerCase().includes(q)
-      );
-    }
+    let list = [...models];
+    
+    // Apply dropdown filters
     if (provider !== "All") list = list.filter((m) => m.provider === provider);
     if (capability !== "All")
       list = list.filter((m) => m.capability.toLowerCase().includes(capability.toLowerCase()));
     if (category !== "All") list = list.filter((m) => m.category === category);
     if (price !== "All") list = list.filter((m) => m.price === price);
+    
+    // Apply sorting
     if (sort === "Name") list.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "Provider") list.sort((a, b) => a.provider.localeCompare(b.provider));
     if (sort === "Context size") list.sort((a, b) => String(b.context).localeCompare(String(a.context)));
+    if (sort === "Newest") list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     if (sort === "Price") list.sort((a, b) => PRICE_OPTIONS.indexOf(a.price) - PRICE_OPTIONS.indexOf(b.price));
+    
     return list;
-  }, [search, sort, provider, capability, category, price]);
+  }, [models, sort, provider, capability, category, price]);
 
   return (
     <div className="relative min-h-screen">
@@ -159,8 +291,22 @@ export default function LLMs() {
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <AnimatePresence mode="popLayout">
-                {filtered.map((model, i) => (
+              {loading ? (
+                <div className="col-span-2 flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary-400" />
+                  <span className="ml-3 text-zinc-400">Loading models...</span>
+                </div>
+              ) : error ? (
+                <div className="col-span-2 flex items-center justify-center py-12">
+                  <p className="text-red-400">{error}</p>
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="col-span-2 flex items-center justify-center py-12">
+                  <p className="text-zinc-400">No models found matching your filters.</p>
+                </div>
+              ) : (
+                <AnimatePresence mode="popLayout">
+                  {filtered.map((model, i) => (
                   <motion.div
                     key={model.id}
                     layout
@@ -202,8 +348,9 @@ export default function LLMs() {
                       Use in Playground
                     </motion.button>
                   </motion.div>
-                ))}
-              </AnimatePresence>
+                  ))}
+                </AnimatePresence>
+              )}
             </div>
           </div>
         </div>
