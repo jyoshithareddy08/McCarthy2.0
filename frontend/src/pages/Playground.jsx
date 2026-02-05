@@ -41,7 +41,7 @@ export default function Playground() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col">
+    <div className="relative flex h-screen overflow-hidden flex-col">
       <AnimatedBackground />
 
       {/* Sidebar overlay - does not push content */}
@@ -55,8 +55,8 @@ export default function Playground() {
         }}
       />
 
-      {/* Main area: offset from left on desktop for sidebar rail */}
-      <div className="relative flex flex-1 flex-col md:ml-14">
+      {/* Main area: fixed height, offset from left on desktop for sidebar rail */}
+      <div className="relative flex flex-1 flex-col min-h-0 md:ml-14">
         {/* Mobile only: sidebar toggle (no PLAYGROUND header) */}
         <div className="sticky top-0 z-30 flex h-12 items-center px-4 md:hidden">
           <button
@@ -69,8 +69,8 @@ export default function Playground() {
           </button>
         </div>
 
-        {/* Content: centered when empty; when chat started, messages scroll + input at fixed height from bottom */}
-        <div className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4 sm:px-6 min-h-0">
+        {/* Content: centered when empty; when chat started, only messages area scrolls, input fixed at bottom */}
+        <div className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col min-h-0 px-4 py-4 sm:px-6">
           <motion.div
             layout
             className={`flex flex-1 flex-col min-h-0 ${hasStartedChat ? "" : "justify-center items-center"}`}
@@ -86,7 +86,7 @@ export default function Playground() {
                   transition={{ duration: 0.25 }}
                   className="flex flex-1 flex-col min-h-0 overflow-hidden"
                 >
-                  <div className="flex-1 min-h-0 max-h-[65vh] overflow-y-auto space-y-6 pb-4 pt-10 sm:pt-12 w-full">
+                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-6 pb-4 pt-10 sm:pt-12 w-full scrollbar-hide">
                     {messages.map((msg) => (
                       <ChatMessage key={msg.id} message={msg} />
                     ))}

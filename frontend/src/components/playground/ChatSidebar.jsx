@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, MessageSquare, FolderOpen, ChevronRight, Menu, X } from "lucide-react";
+import { Search, Plus, MessageSquare, FolderOpen, ChevronRight, ChevronDown, Menu, X } from "lucide-react";
 
 const overlayVariants = {
   hidden: { opacity: 0, pointerEvents: "none" },
@@ -36,6 +36,7 @@ function useMediaQuery(query) {
 export default function ChatSidebar({ isOpen, onClose, onNewChat }) {
   const [expanded, setExpanded] = useState(true);
   const [search, setSearch] = useState("");
+  const [savedOpen, setSavedOpen] = useState(true);
   const isMobile = useMediaQuery("(max-width: 767px)");
   const showContent = isMobile ? isOpen : expanded;
   const showInnerContent = (isMobile && isOpen) || (!isMobile && expanded);
@@ -103,36 +104,57 @@ export default function ChatSidebar({ isOpen, onClose, onNewChat }) {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search chats..."
+                  placeholder="SEARCH CHATS..."
                   className="w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm text-white placeholder:text-zinc-500 focus:border-primary-500/50 focus:outline-none"
                 />
               </div>
 
               <div className="space-y-6 overflow-y-auto">
                 <section>
+                  <button
+                    type="button"
+                    onClick={() => setSavedOpen((o) => !o)}
+                    className="mb-2 flex w-full items-center gap-2 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-400"
+                  >
+                    <FolderOpen className="h-3.5 w-3.5 shrink-0" /> Saved
+                    <motion.span
+                      animate={{ rotate: savedOpen ? 0 : -90 }}
+                      transition={{ duration: 0.2 }}
+                      className="ml-auto"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </motion.span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {savedOpen && (
+                      <motion.ul
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-0.5 overflow-hidden"
+                      >
+                        {savedChats.map((chat) => (
+                          <li key={chat.id}>
+                            <button
+                              type="button"
+                              className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/5 hover:text-white transition-colors"
+                            >
+                              {chat.title}
+                              <ChevronRight className="h-4 w-4 text-zinc-500" />
+                            </button>
+                          </li>
+                        ))}
+                      </motion.ul>
+                    )}
+                  </AnimatePresence>
+                </section>
+                <section>
                   <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
                     <MessageSquare className="h-3.5 w-3.5" /> Recent
                   </h3>
                   <ul className="space-y-0.5">
                     {recentChats.map((chat) => (
-                      <li key={chat.id}>
-                        <button
-                          type="button"
-                          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/5 hover:text-white transition-colors"
-                        >
-                          {chat.title}
-                          <ChevronRight className="h-4 w-4 text-zinc-500" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-                <section>
-                  <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                    <FolderOpen className="h-3.5 w-3.5" /> Saved
-                  </h3>
-                  <ul className="space-y-0.5">
-                    {savedChats.map((chat) => (
                       <li key={chat.id}>
                         <button
                           type="button"
