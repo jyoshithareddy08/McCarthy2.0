@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import crypto from 'crypto';
 import connectDB from '../config/db.js';
 import User from '../models/User.js';
 import Tool from '../models/Tool.js';
@@ -10,22 +9,6 @@ import Message from '../models/Message.js';
 import Segment from '../models/Segment.js';
 import Pipeline from '../models/Pipeline.js';
 import SegmentRun from '../models/SegmentRun.js';
-
-/**
- * Generate a random sample API key
- * Format: gsk_<random64chars> for Groq-style keys
- * Format: sk-<name>-api-key-<random> for OpenAI-style keys
- */
-const generateSampleApiKey = (type = 'generic') => {
-  if (type === 'groq') {
-    // Groq format: gsk_ followed by 64 random hex characters
-    return `gsk_${crypto.randomBytes(32).toString('hex')}`;
-  } else {
-    // Generic format: sk-<name>-api-key-<random>
-    const random = crypto.randomBytes(16).toString('hex');
-    return `sk-sample-api-key-${random}`;
-  }
-};
 
 // Get the directory of the current module
 const __filename = fileURLToPath(import.meta.url);
@@ -96,7 +79,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop',
     title: 'GPT-4 Chat Assistant',
     description: 'Advanced conversational AI powered by GPT-4. Perfect for customer support, content generation, and interactive applications.',
-    apiKey: generateSampleApiKey('groq'),
     apiEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
     provider: 'openai',
     models: ['openai/gpt-oss-120b'],
@@ -121,7 +103,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=400&h=300&fit=crop',
     title: 'DALL-E Image Generator',
     description: 'Generate high-quality images from text descriptions using OpenAI\'s DALL-E model. Create artwork, illustrations, and visual content.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.openai.com/v1/images/generations',
     provider: 'openai',
     models: ['dall-e-3', 'dall-e-2'],
@@ -145,7 +126,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
     title: 'Claude Document Analyzer',
     description: 'Analyze and summarize documents with Anthropic\'s Claude. Extract insights, answer questions, and process long-form content.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.anthropic.com/v1/messages',
     provider: 'anthropic',
     models: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'],
@@ -172,7 +152,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
     title: 'Whisper Speech-to-Text',
     description: 'Convert audio and video to accurate text transcripts using OpenAI Whisper. Supports multiple languages and audio formats.',
-    apiKey: generateSampleApiKey('groq'),
     apiEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
     provider: 'openai',
     models: ['whisper-large-v3'],
@@ -197,7 +176,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
     title: 'LLaMA',
     description: 'Llama is a highly advanced language model, effortlessly bridging the gap between humans and technology through insightful conversations, creative expression, and a vast, ever-expanding knowledge base.',
-    apiKey: generateSampleApiKey('groq'),
     apiEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
     provider: 'google',
     models: ['llama-3.3-70b-versatile', 'mixtral-8x7b-32768', 'gemma-7b-it'],
@@ -222,7 +200,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
     title: 'Code Interpreter Assistant',
     description: 'Execute Python code, analyze data, and generate visualizations. Perfect for data science and automation tasks.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/code/execute',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -244,7 +221,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
     title: 'PDF Document Processor',
     description: 'Extract text, tables, and data from PDF documents. Support for scanned documents with OCR capabilities.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/pdf/process',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -266,7 +242,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=400&h=300&fit=crop',
     title: 'Email Content Generator',
     description: 'Generate professional emails, responses, and marketing content. Tone-aware writing for business communication.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/email/generate',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -287,7 +262,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop',
     title: 'Translation Service Pro',
     description: 'Translate text between 100+ languages with high accuracy. Context-aware translations for professional use.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/translate',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -308,7 +282,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
     title: 'Sentiment Analysis API',
     description: 'Analyze sentiment, emotions, and tone in text. Perfect for social media monitoring and customer feedback analysis.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/sentiment/analyze',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -329,7 +302,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
     title: 'Video Summarizer AI',
     description: 'Generate summaries and transcripts from video content. Extract key moments and create time-stamped highlights.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/video/summarize',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -351,7 +323,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
     title: 'Code Review Assistant',
     description: 'Automated code review with security scanning, bug detection, and best practice suggestions. Supports multiple languages.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/code/review',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -372,7 +343,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=400&h=300&fit=crop',
     title: 'Resume Parser & Analyzer',
     description: 'Extract and analyze resume data. Match candidates to job requirements and generate candidate profiles.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/resume/parse',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -394,7 +364,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop',
     title: 'Invoice Data Extractor',
     description: 'Automatically extract data from invoices, receipts, and financial documents. Export to accounting systems.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/invoice/extract',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -416,7 +385,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
     title: 'Social Media Content Creator',
     description: 'Generate engaging social media posts, captions, and hashtags. Optimized for different platforms and audiences.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/social/generate',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -437,7 +405,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
     title: 'Meeting Notes Generator',
     description: 'Transform meeting recordings into structured notes, action items, and summaries. Integrate with calendar systems.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/meeting/notes',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -459,7 +426,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
     title: 'Product Description Writer',
     description: 'Create compelling product descriptions for e-commerce. SEO-optimized and conversion-focused content.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/product/description',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -480,7 +446,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=400&h=300&fit=crop',
     title: 'Legal Document Analyzer',
     description: 'Analyze contracts, agreements, and legal documents. Extract clauses, identify risks, and generate summaries.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/legal/analyze',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -502,7 +467,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop',
     title: 'Customer Support Bot',
     description: 'Intelligent chatbot for customer support. Handle common queries, escalate issues, and provide 24/7 assistance.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/support/chat',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -523,7 +487,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
     title: 'Blog Post Generator',
     description: 'Create SEO-optimized blog posts, articles, and long-form content. Research-backed and engaging writing.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/blog/generate',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -544,7 +507,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
     title: 'Data Visualization Generator',
     description: 'Create charts, graphs, and visualizations from data. Export to multiple formats and embed in reports.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/visualization/create',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -565,7 +527,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
     title: 'API Documentation Generator',
     description: 'Automatically generate API documentation from code. Create interactive docs with examples and testing tools.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/docs/generate',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -586,7 +547,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=400&h=300&fit=crop',
     title: 'Email Classification System',
     description: 'Automatically categorize and route emails. Detect spam, prioritize messages, and suggest responses.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/email/classify',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -607,7 +567,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop',
     title: 'Text Summarization Engine',
     description: 'Summarize long documents, articles, and content. Extract key points and generate concise summaries.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/text/summarize',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -628,7 +587,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
     title: 'Keyword Research Tool',
     description: 'Discover high-value keywords, analyze competition, and generate SEO-optimized content suggestions.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/keywords/research',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -649,7 +607,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
     title: 'Voice Cloning API',
     description: 'Clone voices for text-to-speech applications. Create natural-sounding audio content with custom voices.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/voice/clone',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -671,7 +628,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
     title: 'Fraud Detection System',
     description: 'Detect fraudulent transactions, accounts, and activities using machine learning and pattern recognition.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/fraud/detect',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -692,7 +648,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=400&h=300&fit=crop',
     title: 'Content Moderation API',
     description: 'Automatically moderate user-generated content. Detect inappropriate text, images, and videos.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/content/moderate',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -714,7 +669,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop',
     title: 'Lead Qualification Bot',
     description: 'Qualify leads through conversational AI. Ask qualifying questions and score leads automatically.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/leads/qualify',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
@@ -735,7 +689,6 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
     title: 'Code Documentation Writer',
     description: 'Generate comprehensive code documentation from source code. Create README files, API docs, and comments.',
-    apiKey: generateSampleApiKey(),
     apiEndpoint: 'https://api.example.com/v1/code/document',
     apiHeaders: {
       'Authorization': 'Bearer {{apiKey}}',
