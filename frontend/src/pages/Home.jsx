@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Sparkles,
-  Zap,
   LayoutGrid,
   Shield,
   ArrowRight,
@@ -26,11 +25,6 @@ const fadeInUp = {
 };
 
 const steps = [
-  {
-    icon: Zap,
-    title: "SUBSCRIBE ONCE",
-    description: "Choose a Plan that Fits Your Team. One Bill for All AI Tools and Models.",
-  },
   {
     icon: LayoutGrid,
     title: "BROWSE THE CATALOG",
@@ -117,7 +111,7 @@ export default function Home() {
           >
             GET FROM SIGNUP TO FIRST API CALL IN MINUTES.
           </motion.p>
-          <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {steps.map((step, i) => (
               <motion.div
                 key={step.title}
