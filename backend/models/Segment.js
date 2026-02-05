@@ -6,21 +6,11 @@ const segmentSchema = new mongoose.Schema({
     required: [true, 'Prompt is required'],
     trim: true
   },
-  response: {
-    type: String,
-    default: null
-  },
   toolId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Tool',
     required: [true, 'Tool ID is required']
   },
-  inputFiles: [{
-    type: String // URLs or file paths
-  }],
-  outputFiles: [{
-    type: String // URLs or file paths
-  }],
   order: {
     type: Number,
     required: [true, 'Order is required'],
@@ -30,6 +20,11 @@ const segmentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Pipeline',
     required: [true, 'Pipeline ID is required']
+  },
+  inputSource: {
+    type: String,
+    enum: ['initial', 'previous'],
+    default: 'previous'
   }
 }, {
   timestamps: true

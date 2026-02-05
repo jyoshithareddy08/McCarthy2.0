@@ -58,7 +58,7 @@ const startServer = async () => {
     // Create empty collections so they appear in MongoDB Compass/Atlas
     const db = mongoose.connection.db;
     if (db) {
-      const collections = ['users', 'sessions', 'messages', 'tools', 'pipelines', 'segments'];
+      const collections = ['users', 'sessions', 'messages', 'tools', 'pipelines', 'segments', 'segmentruns'];
       for (const collectionName of collections) {
         try {
           const collectionExists = await db.listCollections({ name: collectionName }).hasNext();
