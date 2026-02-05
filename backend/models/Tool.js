@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
 
 const toolSchema = new mongoose.Schema({
   uploadedBy: {
@@ -26,6 +25,39 @@ const toolSchema = new mongoose.Schema({
     required: [true, 'API key is required'],
     select: false // Don't return API key by default
   },
+  // API Configuration for external LLM services
+  apiEndpoint: {
+    type: String,
+    trim: true,
+    default: null // If null, will use provider-specific defaults
+  },
+  apiMethod: {
+    type: String,
+    enum: ['GET', 'POST', 'PUT', 'PATCH'],
+    default: 'POST'
+  },
+  apiHeaders: {
+    type: mongoose.Schema.Types.Mixed, // JSON object for custom headers
+    default: null
+  },
+  requestBodyTemplate: {
+    type: mongoose.Schema.Types.Mixed, // JSON template with placeholders
+    default: null
+  },
+  responsePath: {
+    type: String, // JSON path to extract output, e.g., "choices[0].message.content" or "content[0].text"
+    default: null
+  },
+  provider: {
+    type: String,
+    enum: ['openai', 'anthropic', 'google', 'custom'],
+    default: 'custom' // Default to custom for flexibility
+  },
+  model: {
+    type: String, // Model name/ID for the LLM (e.g., "gpt-4", "claude-3-opus", "gemini-pro")
+    trim: true,
+    default: null
+  },
   keywords: [{
     type: String,
     trim: true
@@ -40,21 +72,6 @@ const toolSchema = new mongoose.Schema({
   }]
 }, {
   timestamps: true
-});
-
-// Hash API key before saving
-toolSchema.pre('save', async function(next) {
-  if (!this.isModified('apiKey')) {
-    return next();
-  }
-  
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.apiKey = await bcrypt.hash(this.apiKey, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
 });
 
 // Index for faster searches
