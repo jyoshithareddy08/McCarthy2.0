@@ -7,6 +7,7 @@ import './models/index.js'; // Import all models to register them
 import pipelineRoutes from './routes/pipelineRoutes.js';
 import segmentRoutes from './routes/segmentRoutes.js';
 import segmentRunRoutes from './routes/segmentRunRoutes.js';
+import toolRoutes from './routes/toolRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -37,6 +38,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/pipelines', pipelineRoutes);
 app.use('/api/segments', segmentRoutes);
 app.use('/api/segment-runs', segmentRunRoutes);
+app.use('/api/tools', toolRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -50,7 +50,8 @@ export async function executePipeline(pipelineId, initialInput, inputFiles = [])
         toolId: segment.toolId,
         prompt: segment.prompt,
         inputText: context.text,
-        inputFiles: context.files
+        inputFiles: context.files,
+        model: segment.model || null // Use segment's selected model if specified
       });
 
       // 4d. Update SegmentRun with results

@@ -53,11 +53,10 @@ const toolSchema = new mongoose.Schema({
     enum: ['openai', 'anthropic', 'google', 'custom'],
     default: 'custom' // Default to custom for flexibility
   },
-  model: {
-    type: String, // Model name/ID for the LLM (e.g., "gpt-4", "claude-3-opus", "gemini-pro")
-    trim: true,
-    default: null
-  },
+  models: [{
+    type: String, // Array of model names/IDs for the LLM (e.g., ["gpt-4", "gpt-3.5-turbo", "claude-3-opus"])
+    trim: true
+  }],
   keywords: [{
     type: String,
     trim: true

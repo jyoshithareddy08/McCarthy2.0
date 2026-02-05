@@ -47,7 +47,7 @@ function replacePlaceholders(template, values) {
 /**
  * Execute OpenAI tool (GPT-4, DALL-E, Whisper)
  */
-async function executeOpenAI(tool, prompt, normalizedInput) {
+async function executeOpenAI(tool, prompt, normalizedInput, selectedModel = null) {
   const { toolType } = detectProviderAndType(tool);
   const apiKey = tool.apiKey;
 
@@ -108,9 +108,13 @@ async function executeOpenAI(tool, prompt, normalizedInput) {
     messages.push({ role: 'user', content: normalizedInput.text });
   }
 
-  // Use model from database, or detect from tool metadata
-  let model = tool.model || 'gpt-4';
-  if (!tool.model) {
+  // Use selected model, or first model from array, or detect from tool metadata
+  let model = selectedModel;
+  if (!model && tool.models && tool.models.length > 0) {
+    model = tool.models[0]; // Use first model as default
+  }
+  if (!model) {
+    // Fallback: detect from tool metadata
     const toolText = `${tool.title} ${tool.keywords?.join(' ')}`.toLowerCase();
     if (toolText.includes('gpt-3.5') || toolText.includes('gpt-3')) {
       model = 'gpt-3.5-turbo';
@@ -118,7 +122,14 @@ async function executeOpenAI(tool, prompt, normalizedInput) {
       model = 'gpt-4-turbo-preview';
     } else if (toolText.includes('gpt-4')) {
       model = 'gpt-4';
+    } else {
+      model = 'gpt-4'; // Ultimate fallback
     }
+  }
+  
+  // Validate selected model is in the tool's models array (if array exists)
+  if (tool.models && tool.models.length > 0 && !tool.models.includes(model)) {
+    throw new Error(`Model "${model}" is not available for this tool. Available models: ${tool.models.join(', ')}`);
   }
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -150,16 +161,20 @@ async function executeOpenAI(tool, prompt, normalizedInput) {
 /**
  * Execute Anthropic Claude tool
  */
-async function executeAnthropic(tool, prompt, normalizedInput) {
+async function executeAnthropic(tool, prompt, normalizedInput, selectedModel = null) {
   const apiKey = tool.apiKey;
 
   if (!apiKey) {
     throw new Error('Anthropic API key is missing');
   }
 
-  // Use model from database, or detect from tool metadata
-  let model = tool.model || 'claude-3-opus-20240229';
-  if (!tool.model) {
+  // Use selected model, or first model from array, or detect from tool metadata
+  let model = selectedModel;
+  if (!model && tool.models && tool.models.length > 0) {
+    model = tool.models[0]; // Use first model as default
+  }
+  if (!model) {
+    // Fallback: detect from tool metadata
     const toolText = `${tool.title} ${tool.keywords?.join(' ')}`.toLowerCase();
     if (toolText.includes('claude-3-sonnet')) {
       model = 'claude-3-sonnet-20240229';
@@ -167,7 +182,14 @@ async function executeAnthropic(tool, prompt, normalizedInput) {
       model = 'claude-3-haiku-20240307';
     } else if (toolText.includes('claude-3-opus')) {
       model = 'claude-3-opus-20240229';
+    } else {
+      model = 'claude-3-opus-20240229'; // Ultimate fallback
     }
+  }
+  
+  // Validate selected model is in the tool's models array (if array exists)
+  if (tool.models && tool.models.length > 0 && !tool.models.includes(model)) {
+    throw new Error(`Model "${model}" is not available for this tool. Available models: ${tool.models.join(', ')}`);
   }
 
   const messages = [];
@@ -212,22 +234,33 @@ async function executeAnthropic(tool, prompt, normalizedInput) {
 /**
  * Execute Google Gemini tool
  */
-async function executeGoogle(tool, prompt, normalizedInput) {
+async function executeGoogle(tool, prompt, normalizedInput, selectedModel = null) {
   const apiKey = tool.apiKey;
 
   if (!apiKey) {
     throw new Error('Google API key is missing');
   }
 
-  // Use model from database, or detect from tool metadata
-  let model = tool.model || 'gemini-pro';
-  if (!tool.model) {
+  // Use selected model, or first model from array, or detect from tool metadata
+  let model = selectedModel;
+  if (!model && tool.models && tool.models.length > 0) {
+    model = tool.models[0]; // Use first model as default
+  }
+  if (!model) {
+    // Fallback: detect from tool metadata
     const toolText = `${tool.title} ${tool.keywords?.join(' ')}`.toLowerCase();
     if (toolText.includes('gemini-pro-vision') || toolText.includes('multimodal') || toolText.includes('vision')) {
       model = 'gemini-pro-vision';
     } else if (toolText.includes('gemini-pro')) {
       model = 'gemini-pro';
+    } else {
+      model = 'gemini-pro'; // Ultimate fallback
     }
+  }
+  
+  // Validate selected model is in the tool's models array (if array exists)
+  if (tool.models && tool.models.length > 0 && !tool.models.includes(model)) {
+    throw new Error(`Model "${model}" is not available for this tool. Available models: ${tool.models.join(', ')}`);
   }
 
   const contents = [];
@@ -274,7 +307,7 @@ async function executeGoogle(tool, prompt, normalizedInput) {
 /**
  * Execute custom/external API tool using configuration from database
  */
-async function executeCustomAPI(tool, prompt, normalizedInput) {
+async function executeCustomAPI(tool, prompt, normalizedInput, selectedModel = null) {
   const apiKey = tool.apiKey;
   const apiEndpoint = tool.apiEndpoint;
   const apiMethod = tool.apiMethod || 'POST';
@@ -305,12 +338,15 @@ async function executeCustomAPI(tool, prompt, normalizedInput) {
     headers['Authorization'] = `Bearer ${apiKey}`;
   }
 
+  // Use selected model, or first model from array, or empty string
+  const modelToUse = selectedModel || (tool.models && tool.models.length > 0 ? tool.models[0] : '');
+  
   // Build request body from template
   const values = {
     apiKey: apiKey,
     prompt: prompt || '',
     inputText: normalizedInput.text || '',
-    model: tool.model || '',
+    model: modelToUse,
     inputFiles: normalizedInput.files || []
   };
 
@@ -321,7 +357,7 @@ async function executeCustomAPI(tool, prompt, normalizedInput) {
     requestBody = {
       prompt: prompt || '',
       input: normalizedInput.text || '',
-      ...(tool.model && { model: tool.model })
+      ...(modelToUse && { model: modelToUse })
     };
   }
 
@@ -398,9 +434,10 @@ async function executeCustomAPI(tool, prompt, normalizedInput) {
  * @param {string} params.prompt - Segment prompt
  * @param {string|null} params.inputText - Input text
  * @param {string[]} params.inputFiles - Input file URLs
+ * @param {string|null} params.model - Optional: specific model to use (must be in tool.models array)
  * @returns {Promise<{outputText: string|null, outputFiles: string[]}>}
  */
-export async function executeTool({ toolId, prompt, inputText, inputFiles = [] }) {
+export async function executeTool({ toolId, prompt, inputText, inputFiles = [], model: selectedModel = null }) {
   try {
     // Fetch tool with API key from database
     const tool = await Tool.findById(toolId).select('+apiKey');
@@ -443,18 +480,18 @@ export async function executeTool({ toolId, prompt, inputText, inputFiles = [] }
     let result;
     switch (provider) {
       case 'openai':
-        result = await executeOpenAI(tool, prompt, normalizedInput);
+        result = await executeOpenAI(tool, prompt, normalizedInput, selectedModel);
         break;
       case 'anthropic':
-        result = await executeAnthropic(tool, prompt, normalizedInput);
+        result = await executeAnthropic(tool, prompt, normalizedInput, selectedModel);
         break;
       case 'google':
-        result = await executeGoogle(tool, prompt, normalizedInput);
+        result = await executeGoogle(tool, prompt, normalizedInput, selectedModel);
         break;
       case 'custom':
       default:
         // Use custom API configuration from database
-        result = await executeCustomAPI(tool, prompt, normalizedInput);
+        result = await executeCustomAPI(tool, prompt, normalizedInput, selectedModel);
     }
 
     // Normalize output

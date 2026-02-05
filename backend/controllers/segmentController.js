@@ -8,7 +8,7 @@ import Pipeline from '../models/Pipeline.js';
 export const createSegment = async (req, res) => {
   try {
     const { pipelineId } = req.params;
-    const { prompt, toolId, order, name, inputSource } = req.body;
+    const { prompt, toolId, order, name, inputSource, model } = req.body;
 
     // Validate required fields
     if (!prompt || !toolId || order === undefined) {
@@ -29,7 +29,8 @@ export const createSegment = async (req, res) => {
       toolId,
       order,
       name: name || null,
-      inputSource: inputSource || 'previous'
+      inputSource: inputSource || 'previous',
+      model: model || null
     });
 
     res.status(201).json({
@@ -48,7 +49,7 @@ export const createSegment = async (req, res) => {
 export const updateSegment = async (req, res) => {
   try {
     const { segmentId } = req.params;
-    const { prompt, toolId, order, name, inputSource } = req.body;
+    const { prompt, toolId, order, name, inputSource, model } = req.body;
 
     const updateData = {};
     if (prompt !== undefined) updateData.prompt = prompt;
@@ -56,6 +57,7 @@ export const updateSegment = async (req, res) => {
     if (order !== undefined) updateData.order = order;
     if (name !== undefined) updateData.name = name;
     if (inputSource !== undefined) updateData.inputSource = inputSource;
+    if (model !== undefined) updateData.model = model;
 
     const segment = await Segment.findByIdAndUpdate(
       segmentId,

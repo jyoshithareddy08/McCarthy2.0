@@ -66,6 +66,8 @@ const tools = await Tool.insertMany([
     title: 'GPT-4 Chat Assistant',
     description: 'Advanced conversational AI powered by GPT-4. Perfect for customer support, content generation, and interactive applications.',
     apiKey: 'sk-gpt4-api-key-001',
+    provider: 'openai',
+    models: ['gpt-4', 'gpt-4-turbo-preview', 'gpt-3.5-turbo'],
     keywords: ['chatbot', 'gpt-4', 'conversational-ai', 'customer-support'],
     useCases: ['Customer service automation', 'Content writing', 'Code generation', 'Question answering'],
     alternatives: ['Claude AI', 'Gemini Pro', 'LLaMA 2']
@@ -76,6 +78,8 @@ const tools = await Tool.insertMany([
     title: 'DALL-E Image Generator',
     description: 'Generate high-quality images from text descriptions using OpenAI\'s DALL-E model. Create artwork, illustrations, and visual content.',
     apiKey: 'sk-dalle-api-key-002',
+    provider: 'openai',
+    models: ['dall-e-3', 'dall-e-2'],
     keywords: ['image-generation', 'dall-e', 'art', 'visual-content'],
     useCases: ['Marketing visuals', 'Product mockups', 'Creative artwork', 'Social media content'],
     alternatives: ['Midjourney', 'Stable Diffusion', 'Adobe Firefly']
@@ -86,6 +90,8 @@ const tools = await Tool.insertMany([
     title: 'Claude Document Analyzer',
     description: 'Analyze and summarize documents with Anthropic\'s Claude. Extract insights, answer questions, and process long-form content.',
     apiKey: 'sk-claude-api-key-003',
+    provider: 'anthropic',
+    models: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'],
     keywords: ['document-analysis', 'claude', 'summarization', 'text-processing'],
     useCases: ['Legal document review', 'Research paper analysis', 'Contract summarization', 'Content extraction'],
     alternatives: ['GPT-4', 'Gemini', 'Jurassic-2']
@@ -96,6 +102,8 @@ const tools = await Tool.insertMany([
     title: 'Whisper Speech-to-Text',
     description: 'Convert audio and video to accurate text transcripts using OpenAI Whisper. Supports multiple languages and audio formats.',
     apiKey: 'sk-whisper-api-key-004',
+    provider: 'openai',
+    models: ['whisper-1'],
     keywords: ['speech-to-text', 'transcription', 'audio-processing', 'whisper'],
     useCases: ['Meeting transcription', 'Podcast transcripts', 'Video subtitles', 'Voice notes'],
     alternatives: ['Google Speech-to-Text', 'Azure Speech', 'AssemblyAI']
@@ -106,6 +114,8 @@ const tools = await Tool.insertMany([
     title: 'Gemini Pro Multimodal',
     description: 'Google\'s Gemini Pro for text, image, and video understanding. Process multiple content types in a single request.',
     apiKey: 'sk-gemini-api-key-005',
+    provider: 'google',
+    models: ['gemini-pro', 'gemini-pro-vision'],
     keywords: ['multimodal', 'gemini', 'google-ai', 'vision'],
     useCases: ['Image analysis', 'Video understanding', 'Content moderation', 'Multimedia search'],
     alternatives: ['GPT-4 Vision', 'Claude 3', 'LLaVA']
