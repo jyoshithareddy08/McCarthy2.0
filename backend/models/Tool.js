@@ -28,8 +28,8 @@ const toolSchema = new mongoose.Schema({
   // API Configuration for external LLM services
   apiEndpoint: {
     type: String,
-    trim: true,
-    default: null // If null, will use provider-specific defaults
+    required: [true, 'API endpoint is required'],
+    trim: true
   },
   apiMethod: {
     type: String,

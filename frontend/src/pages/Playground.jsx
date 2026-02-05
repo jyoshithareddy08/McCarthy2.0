@@ -80,13 +80,13 @@ export default function Playground() {
               {hasStartedChat ? (
                 <motion.div
                   key="messages"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
                   className="flex flex-1 flex-col min-h-0 overflow-hidden"
                 >
-                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-6 pb-4 pt-10 sm:pt-12 w-full scrollbar-hide">
+                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-6 pb-4 pt-16 sm:pt-20 w-full scrollbar-hide">
                     {messages.map((msg) => (
                       <ChatMessage key={msg.id} message={msg} />
                     ))}
@@ -115,11 +115,11 @@ export default function Playground() {
                     </AnimatePresence>
                     <div ref={bottomRef} />
                   </div>
-                  {/* Input bar: comfortable spacing from bottom of viewport */}
+                  {/* Input bar: anchored to bottom of page */}
                   <motion.div
                     layout
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="shrink-0 pt-4 pb-8 w-full"
+                    className="shrink-0 pt-4 pb-4 w-full"
                   >
                     <ChatInput
                       value={input}
@@ -133,20 +133,21 @@ export default function Playground() {
                   </motion.div>
                 </motion.div>
               ) : (
-                /* Empty state: motivating text + centered input */
+                /* Empty state: text + input both centered on the page (vertical and horizontal) */
                 <motion.div
                   key="empty"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex w-full flex-col items-center justify-center gap-8 py-8"
+                  exit={{ opacity: 0, y: 40 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex w-full flex-1 flex-col items-center justify-center gap-8 py-8"
                 >
                   <div className="text-center max-w-md">
                     <h2 className="text-xl font-semibold text-white md:text-2xl">
                       READY WHEN YOU ARE..
                     </h2>
                   </div>
-                  <div className="w-full max-w-3xl">
+                  <div className="w-full max-w-3xl px-4">
                     <ChatInput
                       value={input}
                       onChange={setInput}
