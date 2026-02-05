@@ -86,9 +86,22 @@ export const getSegments = async (req, res) => {
 
     const segments = await Segment.find({ pipelineId })
       .sort({ order: 1 })
+      .populate('toolId', 'title models')
       .lean();
 
-    res.json(segments);
+    // Format segments for response
+    const formattedSegments = segments.map(segment => ({
+      id: segment._id.toString(),
+      order: segment.order,
+      toolId: segment.toolId._id.toString(),
+      toolName: segment.toolId?.title || 'Unknown Tool',
+      model: segment.model,
+      prompt: segment.prompt,
+      name: segment.name,
+      inputSource: segment.inputSource
+    }));
+
+    res.json(formattedSegments);
   } catch (error) {
     console.error('Error fetching segments:', error);
     res.status(500).json({ error: 'Failed to fetch segments' });

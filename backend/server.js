@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 import './models/index.js'; // Import all models to register them
+import authRoutes from './routes/authRoutes.js';
 import pipelineRoutes from './routes/pipelineRoutes.js';
 import segmentRoutes from './routes/segmentRoutes.js';
 import segmentRunRoutes from './routes/segmentRunRoutes.js';
@@ -35,6 +36,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/pipelines', pipelineRoutes);
 app.use('/api/segments', segmentRoutes);
 app.use('/api/segment-runs', segmentRunRoutes);
