@@ -1,13 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import connectDB from './config/db.js';
+import './models/index.js'; // Import all models to register them
 
 // Load environment variables
 dotenv.config();
-
-// Connect to MongoDB
-connectDB();
 
 // Initialize Express app
 const app = express();
@@ -51,7 +50,36 @@ app.use((req, res) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Connect to MongoDB and start server
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    // Create empty collections so they appear in MongoDB Compass/Atlas
+    const db = mongoose.connection.db;
+    if (db) {
+      const collections = ['users', 'sessions', 'messages', 'tools', 'pipelines', 'segments', 'segmentruns'];
+      for (const collectionName of collections) {
+        try {
+          const collectionExists = await db.listCollections({ name: collectionName }).hasNext();
+          if (!collectionExists) {
+            await db.createCollection(collectionName);
+            console.log(`✓ Created collection: ${collectionName}`);
+          }
+        } catch (err) {
+          // Collection might already exist, ignore error
+        }
+      }
+    }
+    
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
