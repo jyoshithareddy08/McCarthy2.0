@@ -33,8 +33,14 @@ function useMediaQuery(query) {
   return matches;
 }
 
-export default function ChatSidebar({ isOpen, onClose, onNewChat }) {
-  const [expanded, setExpanded] = useState(true);
+export default function ChatSidebar({ isOpen, onClose, onNewChat, expanded: controlledExpanded, onExpandedChange }) {
+  const [internalExpanded, setInternalExpanded] = useState(true);
+  const expanded = (onExpandedChange != null ? controlledExpanded : internalExpanded) ?? true;
+  const setExpanded = (valueOrUpdater) => {
+    const next = typeof valueOrUpdater === "function" ? valueOrUpdater(expanded) : valueOrUpdater;
+    if (onExpandedChange) onExpandedChange(next);
+    else setInternalExpanded(next);
+  };
   const [search, setSearch] = useState("");
   const [savedOpen, setSavedOpen] = useState(true);
   const isMobile = useMediaQuery("(max-width: 767px)");
