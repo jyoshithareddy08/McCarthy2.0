@@ -1,4 +1,6 @@
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import connectDB from '../config/db.js';
 import User from '../models/User.js';
 import Tool from '../models/Tool.js';
@@ -8,7 +10,12 @@ import Segment from '../models/Segment.js';
 import Pipeline from '../models/Pipeline.js';
 import SegmentRun from '../models/SegmentRun.js';
 
-dotenv.config();
+// Get the directory of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load .env from the backend directory (parent of utils)
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 // Connect to database
 await connectDB();
