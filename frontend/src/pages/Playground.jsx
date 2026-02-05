@@ -5,39 +5,84 @@ import AnimatedBackground from "../components/AnimatedBackground";
 import ChatMessage from "../components/playground/ChatMessage";
 import ChatInput from "../components/playground/ChatInput";
 import ChatSidebar from "../components/playground/ChatSidebar";
+import ModelControlPanel from "../components/playground/ModelControlPanel";
+import { api } from "../lib/api.js";
 
 export default function Playground() {
   const [messages, setMessages] = useState([]);
   const [hasStartedChat, setHasStartedChat] = useState(false);
   const [input, setInput] = useState("");
+  const [mode, setMode] = useState("automatic");
   const [model, setModel] = useState("auto");
+  const [sessionId, setSessionId] = useState(null);
+  const [modelUsed, setModelUsed] = useState(null);
+  const [tools, setTools] = useState([]);
+  const [toolsLoading, setToolsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const bottomRef = useRef(null);
 
   useEffect(() => {
+    api
+      .get("/api/playground/tools")
+      .then(setTools)
+      .catch(() => setTools([]))
+      .finally(() => setToolsLoading(false));
+  }, []);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmed = input.trim();
     if (!trimmed || isTyping) return;
+
+    if (mode === "manual" && (!model || model === "auto")) return;
+
     const userMsg = { id: Date.now().toString(), role: "user", content: trimmed };
     setMessages((m) => [...m, userMsg]);
     setInput("");
     if (!hasStartedChat) setHasStartedChat(true);
     setIsTyping(true);
-    setTimeout(() => {
+
+    try {
+      let sid = sessionId;
+      if (!sid) {
+        const session = await api.post("/api/playground/session", {});
+        sid = session._id;
+        setSessionId(sid);
+      }
+
+      const body = {
+        sessionId: sid,
+        prompt: trimmed,
+        mode,
+      };
+      if (mode === "manual") body.toolId = model;
+
+      const result = await api.post("/api/playground/chat", body);
+      setModelUsed(result.modelUsed);
       setMessages((m) => [
         ...m,
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: "This is a simulated reply. In production, this would stream the model response.",
+          content: result.response || "[No response]",
         },
       ]);
+    } catch (err) {
+      setMessages((m) => [
+        ...m,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: `Error: ${err.message}`,
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -51,14 +96,16 @@ export default function Playground() {
         onNewChat={() => {
           setMessages([]);
           setHasStartedChat(false);
+          setSessionId(null);
+          setModelUsed(null);
           setSidebarOpen(false);
         }}
       />
 
-      {/* Main area: fixed height, offset from left on desktop for sidebar rail */}
-      <div className="relative flex flex-1 flex-col min-h-0 md:ml-14">
-        {/* Mobile only: sidebar toggle (no PLAYGROUND header) */}
-        <div className="sticky top-0 z-30 flex h-12 items-center px-4 md:hidden">
+      {/* Main area: flex row - content + right panel */}
+      <div className="relative flex flex-1 min-h-0 md:ml-14">
+        {/* Mobile only: sidebar toggle */}
+        <div className="absolute top-0 left-0 right-0 z-30 flex h-12 items-center px-4 md:hidden">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
@@ -69,8 +116,10 @@ export default function Playground() {
           </button>
         </div>
 
-        {/* Content: centered when empty; when chat started, only messages area scrolls, input fixed at bottom */}
-        <div className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col min-h-0 px-4 py-4 sm:px-6">
+        {/* Content: chat area (flex-1) + right panel (model controls) */}
+        <div className="relative flex flex-1 min-h-0 min-w-0">
+          {/* Chat content area */}
+          <div className="relative flex flex-1 flex-col min-h-0 min-w-0 px-4 py-4 sm:px-6">
           <motion.div
             layout
             className={`flex flex-1 flex-col min-h-0 ${hasStartedChat ? "" : "justify-center items-center"}`}
@@ -86,7 +135,7 @@ export default function Playground() {
                   transition={{ duration: 0.25 }}
                   className="flex flex-1 flex-col min-h-0 overflow-hidden"
                 >
-                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-6 pb-4 pt-10 sm:pt-12 w-full scrollbar-hide">
+                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-6 pb-4 pt-10 sm:pt-12 w-full max-w-3xl mx-auto scrollbar-hide">
                     {messages.map((msg) => (
                       <ChatMessage key={msg.id} message={msg} />
                     ))}
@@ -119,14 +168,12 @@ export default function Playground() {
                   <motion.div
                     layout
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="shrink-0 pt-4 pb-8 w-full"
+                    className="shrink-0 pt-4 pb-8 w-full max-w-3xl mx-auto"
                   >
                     <ChatInput
                       value={input}
                       onChange={setInput}
                       onSubmit={handleSend}
-                      model={model}
-                      onModelChange={setModel}
                       disabled={isTyping}
                       placeholder="Ask anything..."
                     />
@@ -139,7 +186,7 @@ export default function Playground() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex w-full flex-col items-center justify-center gap-8 py-8"
+                  className="flex w-full flex-1 flex-col items-center justify-center gap-8 py-8 ml-[10.5rem] lg:ml-[15rem] -mt-48"
                 >
                   <div className="text-center max-w-md">
                     <h2 className="text-xl font-semibold text-white md:text-2xl">
@@ -151,8 +198,6 @@ export default function Playground() {
                       value={input}
                       onChange={setInput}
                       onSubmit={handleSend}
-                      model={model}
-                      onModelChange={setModel}
                       disabled={isTyping}
                       placeholder="Ask anything..."
                     />
@@ -161,6 +206,20 @@ export default function Playground() {
               )}
             </AnimatePresence>
           </motion.div>
+          </div>
+
+          {/* Right panel: model selection (visible on lg+ screens) */}
+          <aside className={`hidden lg:flex lg:flex-col lg:w-72 xl:w-80 shrink-0 border-l border-white/10 bg-white/[0.02] pl-6 pr-8 py-8 overflow-y-auto ${!hasStartedChat ? "lg:justify-center" : ""}`}>
+            <ModelControlPanel
+              mode={mode}
+              onModeChange={setMode}
+              model={model}
+              onModelChange={setModel}
+              tools={tools}
+              modelUsed={modelUsed}
+              loading={isTyping}
+            />
+          </aside>
         </div>
       </div>
     </div>

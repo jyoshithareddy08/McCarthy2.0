@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 import './models/index.js'; // Import all models to register them
+import playgroundRoutes from './features/playground/playground.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -30,8 +31,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Routes will be added here
-// Example: app.use('/api/users', userRoutes);
+// Playground routes (requires X-User-Id header or PLAYGROUND_DEMO_USER_ID in env)
+app.use('/api/playground', playgroundRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
