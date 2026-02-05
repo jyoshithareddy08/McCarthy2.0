@@ -65,10 +65,22 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop',
     title: 'GPT-4 Chat Assistant',
     description: 'Advanced conversational AI powered by GPT-4. Perfect for customer support, content generation, and interactive applications.',
-    apiKey: 'sk-gpt4-api-key-001',
-    apiEndpoint: 'https://api.openai.com/v1/chat/completions',
+    apiKey: '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',
+    apiEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
     provider: 'openai',
-    models: ['gpt-4', 'gpt-4-turbo-preview', 'gpt-3.5-turbo'],
+    models: ['llama-3.1-70b-versatile', 'mixtral-8x7b-32768', 'gemma-7b-it'],
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      messages: [
+        { role: 'system', content: '{{prompt}}' },
+        { role: 'user', content: '{{inputText}}' }
+      ]
+    },
+    responsePath: 'choices[0].message.content',
     keywords: ['chatbot', 'gpt-4', 'conversational-ai', 'customer-support'],
     useCases: ['Customer service automation', 'Content writing', 'Code generation', 'Question answering'],
     alternatives: ['Claude AI', 'Gemini Pro', 'LLaMA 2']
@@ -82,6 +94,17 @@ const tools = await Tool.insertMany([
     apiEndpoint: 'https://api.openai.com/v1/images/generations',
     provider: 'openai',
     models: ['dall-e-3', 'dall-e-2'],
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{inputText}}',
+      n: 1,
+      size: '1024x1024'
+    },
+    responsePath: 'data[0].url',
     keywords: ['image-generation', 'dall-e', 'art', 'visual-content'],
     useCases: ['Marketing visuals', 'Product mockups', 'Creative artwork', 'Social media content'],
     alternatives: ['Midjourney', 'Stable Diffusion', 'Adobe Firefly']
@@ -95,6 +118,20 @@ const tools = await Tool.insertMany([
     apiEndpoint: 'https://api.anthropic.com/v1/messages',
     provider: 'anthropic',
     models: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'],
+    apiHeaders: {
+      'x-api-key': '{{apiKey}}',
+      'anthropic-version': '2023-06-01',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      max_tokens: 4096,
+      system: '{{prompt}}',
+      messages: [
+        { role: 'user', content: '{{inputText}}' }
+      ]
+    },
+    responsePath: 'content[0].text',
     keywords: ['document-analysis', 'claude', 'summarization', 'text-processing'],
     useCases: ['Legal document review', 'Research paper analysis', 'Contract summarization', 'Content extraction'],
     alternatives: ['GPT-4', 'Gemini', 'Jurassic-2']
@@ -104,10 +141,22 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
     title: 'Whisper Speech-to-Text',
     description: 'Convert audio and video to accurate text transcripts using OpenAI Whisper. Supports multiple languages and audio formats.',
-    apiKey: 'sk-whisper-api-key-004',
-    apiEndpoint: 'https://api.openai.com/v1/audio/transcriptions',
+    apiKey: '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',
+    apiEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
     provider: 'openai',
-    models: ['whisper-1'],
+    models: ['llama-3.1-70b-versatile', 'mixtral-8x7b-32768'],
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      messages: [
+        { role: 'system', content: '{{prompt}}' },
+        { role: 'user', content: '{{inputText}}' }
+      ]
+    },
+    responsePath: 'choices[0].message.content',
     keywords: ['speech-to-text', 'transcription', 'audio-processing', 'whisper'],
     useCases: ['Meeting transcription', 'Podcast transcripts', 'Video subtitles', 'Voice notes'],
     alternatives: ['Google Speech-to-Text', 'Azure Speech', 'AssemblyAI']
@@ -115,12 +164,24 @@ const tools = await Tool.insertMany([
   {
     uploadedBy: vendors[2]._id,
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
-    title: 'Gemini Pro Multimodal',
-    description: 'Google\'s Gemini Pro for text, image, and video understanding. Process multiple content types in a single request.',
-    apiKey: 'sk-gemini-api-key-005',
-    apiEndpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+    title: 'LLaMA',
+    description: 'Llama is a highly advanced language model, effortlessly bridging the gap between humans and technology through insightful conversations, creative expression, and a vast, ever-expanding knowledge base.',
+    apiKey: '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',
+    apiEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
     provider: 'google',
-    models: ['gemini-pro', 'gemini-pro-vision'],
+    models: ['llama-3.1-70b-versatile', 'mixtral-8x7b-32768', 'gemma-7b-it'],
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      messages: [
+        { role: 'system', content: '{{prompt}}' },
+        { role: 'user', content: '{{inputText}}' }
+      ]
+    },
+    responsePath: 'choices[0].message.content',
     keywords: ['multimodal', 'gemini', 'google-ai', 'vision'],
     useCases: ['Image analysis', 'Video understanding', 'Content moderation', 'Multimedia search'],
     alternatives: ['GPT-4 Vision', 'Claude 3', 'LLaVA']
@@ -131,6 +192,18 @@ const tools = await Tool.insertMany([
     title: 'Code Interpreter Assistant',
     description: 'Execute Python code, analyze data, and generate visualizations. Perfect for data science and automation tasks.',
     apiKey: 'sk-code-api-key-006',
+    apiEndpoint: 'https://api.example.com/v1/code/execute',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      input: '{{inputText}}',
+      code: '{{inputText}}'
+    },
+    responsePath: 'output',
     keywords: ['code-execution', 'python', 'data-analysis', 'automation'],
     useCases: ['Data analysis', 'Report generation', 'API automation', 'Script execution'],
     alternatives: ['Jupyter Notebooks', 'Google Colab', 'Replit']
@@ -141,6 +214,18 @@ const tools = await Tool.insertMany([
     title: 'PDF Document Processor',
     description: 'Extract text, tables, and data from PDF documents. Support for scanned documents with OCR capabilities.',
     apiKey: 'sk-pdf-api-key-007',
+    apiEndpoint: 'https://api.example.com/v1/pdf/process',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      input: '{{inputText}}',
+      files: '{{inputFiles}}'
+    },
+    responsePath: 'text',
     keywords: ['pdf-processing', 'ocr', 'document-extraction', 'data-extraction'],
     useCases: ['Invoice processing', 'Form extraction', 'Document digitization', 'Data entry automation'],
     alternatives: ['Adobe Acrobat', 'Tabula', 'PyPDF2']
@@ -151,6 +236,17 @@ const tools = await Tool.insertMany([
     title: 'Email Content Generator',
     description: 'Generate professional emails, responses, and marketing content. Tone-aware writing for business communication.',
     apiKey: 'sk-email-api-key-008',
+    apiEndpoint: 'https://api.example.com/v1/email/generate',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      input: '{{inputText}}'
+    },
+    responsePath: 'content',
     keywords: ['email-generation', 'content-writing', 'business-communication', 'copywriting'],
     useCases: ['Email campaigns', 'Customer responses', 'Newsletter content', 'Follow-up emails'],
     alternatives: ['Grammarly', 'Jasper', 'Copy.ai']
@@ -161,6 +257,17 @@ const tools = await Tool.insertMany([
     title: 'Translation Service Pro',
     description: 'Translate text between 100+ languages with high accuracy. Context-aware translations for professional use.',
     apiKey: 'sk-translate-api-key-009',
+    apiEndpoint: 'https://api.example.com/v1/translate',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      text: '{{inputText}}'
+    },
+    responsePath: 'translated_text',
     keywords: ['translation', 'multilingual', 'localization', 'language-processing'],
     useCases: ['Website localization', 'Document translation', 'Customer support', 'Content localization'],
     alternatives: ['Google Translate', 'DeepL', 'Microsoft Translator']
@@ -171,6 +278,17 @@ const tools = await Tool.insertMany([
     title: 'Sentiment Analysis API',
     description: 'Analyze sentiment, emotions, and tone in text. Perfect for social media monitoring and customer feedback analysis.',
     apiKey: 'sk-sentiment-api-key-010',
+    apiEndpoint: 'https://api.example.com/v1/sentiment/analyze',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      text: '{{inputText}}'
+    },
+    responsePath: 'sentiment',
     keywords: ['sentiment-analysis', 'nlp', 'emotion-detection', 'text-analysis'],
     useCases: ['Social media monitoring', 'Customer feedback', 'Review analysis', 'Brand reputation'],
     alternatives: ['AWS Comprehend', 'Google Cloud NLP', 'IBM Watson']
@@ -181,6 +299,18 @@ const tools = await Tool.insertMany([
     title: 'Video Summarizer AI',
     description: 'Generate summaries and transcripts from video content. Extract key moments and create time-stamped highlights.',
     apiKey: 'sk-video-api-key-011',
+    apiEndpoint: 'https://api.example.com/v1/video/summarize',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      video_url: '{{inputFiles}}',
+      input: '{{inputText}}'
+    },
+    responsePath: 'summary',
     keywords: ['video-analysis', 'summarization', 'video-processing', 'content-extraction'],
     useCases: ['Video content analysis', 'Meeting summaries', 'Educational content', 'Content moderation'],
     alternatives: ['YouTube Transcript', 'Descript', 'Otter.ai']
@@ -191,6 +321,17 @@ const tools = await Tool.insertMany([
     title: 'Code Review Assistant',
     description: 'Automated code review with security scanning, bug detection, and best practice suggestions. Supports multiple languages.',
     apiKey: 'sk-code-review-api-key-012',
+    apiEndpoint: 'https://api.example.com/v1/code/review',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      code: '{{inputText}}'
+    },
+    responsePath: 'review',
     keywords: ['code-review', 'security-scanning', 'bug-detection', 'code-quality'],
     useCases: ['Code quality checks', 'Security audits', 'Bug prevention', 'Best practices'],
     alternatives: ['SonarQube', 'CodeClimate', 'Snyk']
@@ -201,6 +342,18 @@ const tools = await Tool.insertMany([
     title: 'Resume Parser & Analyzer',
     description: 'Extract and analyze resume data. Match candidates to job requirements and generate candidate profiles.',
     apiKey: 'sk-resume-api-key-013',
+    apiEndpoint: 'https://api.example.com/v1/resume/parse',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      resume_url: '{{inputFiles}}',
+      text: '{{inputText}}'
+    },
+    responsePath: 'parsed_data',
     keywords: ['resume-parsing', 'recruitment', 'talent-acquisition', 'hr-automation'],
     useCases: ['ATS integration', 'Candidate screening', 'Resume database', 'Talent matching'],
     alternatives: ['Greenhouse', 'Lever', 'Workday']
@@ -211,6 +364,18 @@ const tools = await Tool.insertMany([
     title: 'Invoice Data Extractor',
     description: 'Automatically extract data from invoices, receipts, and financial documents. Export to accounting systems.',
     apiKey: 'sk-invoice-api-key-014',
+    apiEndpoint: 'https://api.example.com/v1/invoice/extract',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      invoice_url: '{{inputFiles}}',
+      text: '{{inputText}}'
+    },
+    responsePath: 'extracted_data',
     keywords: ['invoice-processing', 'receipt-ocr', 'financial-automation', 'expense-management'],
     useCases: ['Accounts payable', 'Expense reporting', 'Financial auditing', 'Bookkeeping automation'],
     alternatives: ['QuickBooks', 'Xero', 'FreshBooks']
@@ -221,6 +386,17 @@ const tools = await Tool.insertMany([
     title: 'Social Media Content Creator',
     description: 'Generate engaging social media posts, captions, and hashtags. Optimized for different platforms and audiences.',
     apiKey: 'sk-social-api-key-015',
+    apiEndpoint: 'https://api.example.com/v1/social/generate',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      input: '{{inputText}}'
+    },
+    responsePath: 'content',
     keywords: ['social-media', 'content-creation', 'marketing', 'copywriting'],
     useCases: ['Content calendar', 'Post generation', 'Hashtag research', 'Engagement optimization'],
     alternatives: ['Hootsuite', 'Buffer', 'Later']
@@ -231,6 +407,18 @@ const tools = await Tool.insertMany([
     title: 'Meeting Notes Generator',
     description: 'Transform meeting recordings into structured notes, action items, and summaries. Integrate with calendar systems.',
     apiKey: 'sk-meeting-api-key-016',
+    apiEndpoint: 'https://api.example.com/v1/meeting/notes',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      audio_url: '{{inputFiles}}',
+      transcript: '{{inputText}}'
+    },
+    responsePath: 'notes',
     keywords: ['meeting-notes', 'transcription', 'productivity', 'collaboration'],
     useCases: ['Team meetings', 'Client calls', 'Interview notes', 'Project updates'],
     alternatives: ['Otter.ai', 'Fireflies', 'Notion AI']
@@ -241,6 +429,17 @@ const tools = await Tool.insertMany([
     title: 'Product Description Writer',
     description: 'Create compelling product descriptions for e-commerce. SEO-optimized and conversion-focused content.',
     apiKey: 'sk-product-api-key-017',
+    apiEndpoint: 'https://api.example.com/v1/product/description',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      product_info: '{{inputText}}'
+    },
+    responsePath: 'description',
     keywords: ['e-commerce', 'product-descriptions', 'seo', 'copywriting'],
     useCases: ['Online stores', 'Marketplace listings', 'Catalog management', 'SEO optimization'],
     alternatives: ['Jasper', 'Copy.ai', 'Writesonic']
@@ -251,6 +450,18 @@ const tools = await Tool.insertMany([
     title: 'Legal Document Analyzer',
     description: 'Analyze contracts, agreements, and legal documents. Extract clauses, identify risks, and generate summaries.',
     apiKey: 'sk-legal-api-key-018',
+    apiEndpoint: 'https://api.example.com/v1/legal/analyze',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      document_url: '{{inputFiles}}',
+      text: '{{inputText}}'
+    },
+    responsePath: 'analysis',
     keywords: ['legal-tech', 'contract-analysis', 'compliance', 'document-review'],
     useCases: ['Contract review', 'Due diligence', 'Compliance checking', 'Risk assessment'],
     alternatives: ['LegalZoom', 'DocuSign', 'Ironclad']
@@ -261,6 +472,17 @@ const tools = await Tool.insertMany([
     title: 'Customer Support Bot',
     description: 'Intelligent chatbot for customer support. Handle common queries, escalate issues, and provide 24/7 assistance.',
     apiKey: 'sk-support-api-key-019',
+    apiEndpoint: 'https://api.example.com/v1/support/chat',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      message: '{{inputText}}'
+    },
+    responsePath: 'response',
     keywords: ['customer-support', 'chatbot', 'automation', 'helpdesk'],
     useCases: ['FAQ automation', 'Ticket routing', 'First-line support', 'Customer engagement'],
     alternatives: ['Intercom', 'Zendesk', 'Freshdesk']
@@ -271,6 +493,17 @@ const tools = await Tool.insertMany([
     title: 'Blog Post Generator',
     description: 'Create SEO-optimized blog posts, articles, and long-form content. Research-backed and engaging writing.',
     apiKey: 'sk-blog-api-key-020',
+    apiEndpoint: 'https://api.example.com/v1/blog/generate',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      topic: '{{inputText}}'
+    },
+    responsePath: 'article',
     keywords: ['content-writing', 'blogging', 'seo', 'article-generation'],
     useCases: ['Content marketing', 'SEO content', 'Thought leadership', 'Content calendar'],
     alternatives: ['Jasper', 'Copy.ai', 'Writesonic']
@@ -281,6 +514,17 @@ const tools = await Tool.insertMany([
     title: 'Data Visualization Generator',
     description: 'Create charts, graphs, and visualizations from data. Export to multiple formats and embed in reports.',
     apiKey: 'sk-viz-api-key-021',
+    apiEndpoint: 'https://api.example.com/v1/visualization/create',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      data: '{{inputText}}'
+    },
+    responsePath: 'visualization_url',
     keywords: ['data-visualization', 'charts', 'analytics', 'reporting'],
     useCases: ['Business reports', 'Data analysis', 'Presentations', 'Dashboards'],
     alternatives: ['Tableau', 'Power BI', 'Google Data Studio']
@@ -291,6 +535,17 @@ const tools = await Tool.insertMany([
     title: 'API Documentation Generator',
     description: 'Automatically generate API documentation from code. Create interactive docs with examples and testing tools.',
     apiKey: 'sk-api-doc-api-key-022',
+    apiEndpoint: 'https://api.example.com/v1/docs/generate',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      code: '{{inputText}}'
+    },
+    responsePath: 'documentation',
     keywords: ['api-documentation', 'developer-tools', 'technical-writing', 'swagger'],
     useCases: ['API documentation', 'Developer onboarding', 'Integration guides', 'Technical specs'],
     alternatives: ['Swagger', 'Postman', 'ReadMe']
@@ -301,6 +556,17 @@ const tools = await Tool.insertMany([
     title: 'Email Classification System',
     description: 'Automatically categorize and route emails. Detect spam, prioritize messages, and suggest responses.',
     apiKey: 'sk-email-class-api-key-023',
+    apiEndpoint: 'https://api.example.com/v1/email/classify',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      email: '{{inputText}}'
+    },
+    responsePath: 'category',
     keywords: ['email-management', 'classification', 'automation', 'productivity'],
     useCases: ['Email triage', 'Spam detection', 'Priority routing', 'Response suggestions'],
     alternatives: ['Gmail Filters', 'Outlook Rules', 'SaneBox']
@@ -311,6 +577,17 @@ const tools = await Tool.insertMany([
     title: 'Text Summarization Engine',
     description: 'Summarize long documents, articles, and content. Extract key points and generate concise summaries.',
     apiKey: 'sk-summarize-api-key-024',
+    apiEndpoint: 'https://api.example.com/v1/text/summarize',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      text: '{{inputText}}'
+    },
+    responsePath: 'summary',
     keywords: ['summarization', 'text-processing', 'nlp', 'content-analysis'],
     useCases: ['Research papers', 'News articles', 'Meeting notes', 'Document review'],
     alternatives: ['SMMRY', 'Resoomer', 'TLDR This']
@@ -321,6 +598,17 @@ const tools = await Tool.insertMany([
     title: 'Keyword Research Tool',
     description: 'Discover high-value keywords, analyze competition, and generate SEO-optimized content suggestions.',
     apiKey: 'sk-keyword-api-key-025',
+    apiEndpoint: 'https://api.example.com/v1/keywords/research',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      topic: '{{inputText}}'
+    },
+    responsePath: 'keywords',
     keywords: ['seo', 'keyword-research', 'content-optimization', 'marketing'],
     useCases: ['SEO strategy', 'Content planning', 'Competitor analysis', 'Ad campaigns'],
     alternatives: ['Ahrefs', 'SEMrush', 'Moz']
@@ -331,6 +619,18 @@ const tools = await Tool.insertMany([
     title: 'Voice Cloning API',
     description: 'Clone voices for text-to-speech applications. Create natural-sounding audio content with custom voices.',
     apiKey: 'sk-voice-api-key-026',
+    apiEndpoint: 'https://api.example.com/v1/voice/clone',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      text: '{{inputText}}',
+      voice_id: '{{inputFiles}}'
+    },
+    responsePath: 'audio_url',
     keywords: ['voice-cloning', 'text-to-speech', 'audio-generation', 'synthetic-media'],
     useCases: ['Audiobook production', 'Voiceovers', 'Accessibility', 'Content creation'],
     alternatives: ['ElevenLabs', 'Murf', 'Descript']
@@ -341,6 +641,17 @@ const tools = await Tool.insertMany([
     title: 'Fraud Detection System',
     description: 'Detect fraudulent transactions, accounts, and activities using machine learning and pattern recognition.',
     apiKey: 'sk-fraud-api-key-027',
+    apiEndpoint: 'https://api.example.com/v1/fraud/detect',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      transaction_data: '{{inputText}}'
+    },
+    responsePath: 'risk_score',
     keywords: ['fraud-detection', 'security', 'risk-analysis', 'ml'],
     useCases: ['Payment fraud', 'Account security', 'Transaction monitoring', 'Risk assessment'],
     alternatives: ['Sift', 'Kount', 'Signifyd']
@@ -351,6 +662,18 @@ const tools = await Tool.insertMany([
     title: 'Content Moderation API',
     description: 'Automatically moderate user-generated content. Detect inappropriate text, images, and videos.',
     apiKey: 'sk-moderation-api-key-028',
+    apiEndpoint: 'https://api.example.com/v1/content/moderate',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      content: '{{inputText}}',
+      image_url: '{{inputFiles}}'
+    },
+    responsePath: 'moderation_result',
     keywords: ['content-moderation', 'safety', 'compliance', 'automation'],
     useCases: ['Social platforms', 'Comment moderation', 'User safety', 'Compliance'],
     alternatives: ['AWS Rekognition', 'Google Cloud Vision', 'Sightengine']
@@ -361,6 +684,17 @@ const tools = await Tool.insertMany([
     title: 'Lead Qualification Bot',
     description: 'Qualify leads through conversational AI. Ask qualifying questions and score leads automatically.',
     apiKey: 'sk-lead-api-key-029',
+    apiEndpoint: 'https://api.example.com/v1/leads/qualify',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      lead_data: '{{inputText}}'
+    },
+    responsePath: 'qualification_score',
     keywords: ['lead-qualification', 'sales-automation', 'crm', 'conversational-ai'],
     useCases: ['Lead scoring', 'Sales qualification', 'CRM integration', 'Pipeline management'],
     alternatives: ['HubSpot', 'Salesforce', 'Pipedrive']
@@ -371,6 +705,17 @@ const tools = await Tool.insertMany([
     title: 'Code Documentation Writer',
     description: 'Generate comprehensive code documentation from source code. Create README files, API docs, and comments.',
     apiKey: 'sk-code-doc-api-key-030',
+    apiEndpoint: 'https://api.example.com/v1/code/document',
+    apiHeaders: {
+      'Authorization': 'Bearer {{apiKey}}',
+      'Content-Type': 'application/json'
+    },
+    requestBodyTemplate: {
+      model: '{{model}}',
+      prompt: '{{prompt}}',
+      code: '{{inputText}}'
+    },
+    responsePath: 'documentation',
     keywords: ['code-documentation', 'developer-tools', 'technical-writing', 'automation'],
     useCases: ['Code documentation', 'API documentation', 'Onboarding', 'Maintenance'],
     alternatives: ['JSDoc', 'Sphinx', 'Doxygen']

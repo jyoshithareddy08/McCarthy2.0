@@ -38,22 +38,41 @@ async function testToolAdapter() {
       console.log(`   Provider: ${tool.provider || 'auto-detect'}`);
       console.log(`   Models: ${tool.models?.join(', ') || 'auto-detect'}`);
       console.log(`   API Endpoint: ${tool.apiEndpoint || 'provider default'}`);
+      console.log(`   Request Body Template: ${tool.requestBodyTemplate ? 'Yes' : 'No (using default)'}`);
+      console.log(`   Response Path: ${tool.responsePath || 'auto-detect'}`);
       console.log('-'.repeat(60));
+
+      // Select a model from the tool's models array
+      let selectedModel = null;
+      if (tool.models && tool.models.length > 0) {
+        selectedModel = tool.models[0]; // Use first model
+        console.log(`   Selected Model: ${selectedModel}`);
+      } else {
+        console.log(`   ⚠️  No models configured - will use empty model string`);
+      }
 
       try {
         const result = await executeTool({
           toolId: tool._id.toString(),
           prompt: 'You are a helpful assistant. Respond briefly.',
           inputText: 'Say hello in one sentence.',
-          inputFiles: []
+          inputFiles: [],
+          model: selectedModel // Pass the selected model
         });
 
         console.log('✅ Success!');
-        console.log(`   Output Text: ${result.outputText?.substring(0, 100) || 'null'}...`);
+        console.log(`   Output Text: ${result.outputText?.substring(0, 200) || 'null'}...`);
         console.log(`   Output Files: ${result.outputFiles?.length || 0} file(s)`);
+        if (result.outputFiles && result.outputFiles.length > 0) {
+          console.log(`   Files: ${result.outputFiles.join(', ')}`);
+        }
       } catch (error) {
         console.log('❌ Error:');
-        console.log(`   ${error.message}`);
+        console.log(`   Message: ${error.message}`);
+        // Show more details if available
+        if (error.stack) {
+          console.log(`   Stack: ${error.stack.split('\n')[1]?.trim() || 'N/A'}`);
+        }
       }
 
       console.log('-'.repeat(60));
