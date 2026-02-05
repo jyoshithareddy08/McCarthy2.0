@@ -13,7 +13,6 @@ export default function Playground() {
   const [model, setModel] = useState("auto");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -54,14 +53,10 @@ export default function Playground() {
           setHasStartedChat(false);
           setSidebarOpen(false);
         }}
-        expanded={sidebarExpanded}
-        onExpandedChange={setSidebarExpanded}
       />
 
-      {/* Main area: margin matches sidebar width so content centers in available space */}
-      <div
-        className={`relative flex flex-1 flex-col min-h-0 ${sidebarExpanded ? "md:ml-[280px]" : "md:ml-14"}`}
-      >
+      {/* Main area: fixed height, offset from left on desktop for sidebar rail */}
+      <div className="relative flex flex-1 flex-col min-h-0 md:ml-14">
         {/* Mobile only: sidebar toggle (no PLAYGROUND header) */}
         <div className="sticky top-0 z-30 flex h-12 items-center px-4 md:hidden">
           <button
@@ -138,14 +133,14 @@ export default function Playground() {
                   </motion.div>
                 </motion.div>
               ) : (
-                /* Empty state: text + input centered in viewport (compensate for sidebar offset on desktop) */
+                /* Empty state: text + input both centered on the page (vertical and horizontal) */
                 <motion.div
                   key="empty"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, y: 40 }}
                   transition={{ duration: 0.3 }}
-                  className="flex w-full flex-1 flex-col items-center justify-center gap-8 py-8 -translate-y-10"
+                  className="flex w-full flex-1 flex-col items-center justify-center gap-8 py-8"
                 >
                   <div className="text-center max-w-md">
                     <h2 className="text-xl font-semibold text-white md:text-2xl">

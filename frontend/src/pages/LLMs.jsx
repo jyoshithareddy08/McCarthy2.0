@@ -3,23 +3,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Cpu, Zap, MessageSquare } from "lucide-react";
 import AnimatedBackground from "../components/AnimatedBackground";
 
-const SORT_OPTIONS = ["Name", "Provider", "Context size", "Newest", "Price"];
-const PROVIDERS = ["All", "OpenAI", "Anthropic", "Google", "Mistral", "Meta", "Stability"];
+const SORT_OPTIONS = ["Name", "Provider", "Context size", "Newest"];
+const PROVIDERS = ["All", "OpenAI", "Anthropic", "Google", "Mistral", "Meta"];
 const CAPABILITIES = ["All", "Chat", "Completion", "Vision", "Function calling"];
-const CATEGORIES = ["All", "Text", "Image", "Business", "Finance", "3D Modelling", "Code", "Data", "Marketing", "Research"];
-const PRICE_OPTIONS = ["All", "Free", "Basic", "Pro", "Enterprise"];
 
 const mockModels = [
-  { id: "1", name: "GPT-4o", provider: "OpenAI", context: "128K", capability: "Chat, Vision", tier: "Pro", category: "Text", price: "Pro" },
-  { id: "2", name: "Claude 3.5 Sonnet", provider: "Anthropic", context: "200K", capability: "Chat, Vision", tier: "Pro", category: "Text", price: "Pro" },
-  { id: "3", name: "Gemini 1.5 Pro", provider: "Google", context: "1M", capability: "Chat, Vision", tier: "Pro", category: "Text", price: "Pro" },
-  { id: "4", name: "GPT-4o mini", provider: "OpenAI", context: "128K", capability: "Chat", tier: "Basic", category: "Text", price: "Basic" },
-  { id: "5", name: "Claude 3 Haiku", provider: "Anthropic", context: "200K", capability: "Chat", tier: "Basic", category: "Text", price: "Basic" },
-  { id: "6", name: "Llama 3.1 70B", provider: "Meta", context: "128K", capability: "Completion", tier: "Pro", category: "Code", price: "Pro" },
-  { id: "7", name: "Mistral Large", provider: "Mistral", context: "128K", capability: "Chat, Function calling", tier: "Pro", category: "Business", price: "Pro" },
-  { id: "8", name: "DALL-E 3", provider: "OpenAI", context: "—", capability: "Image", tier: "Pro", category: "Image", price: "Pro" },
-  { id: "9", name: "Stable Diffusion", provider: "Stability", context: "—", capability: "Image", tier: "Basic", category: "Image", price: "Basic" },
-  { id: "10", name: "Finance GPT", provider: "OpenAI", context: "128K", capability: "Chat", tier: "Pro", category: "Finance", price: "Enterprise" },
+  { id: "1", name: "GPT-4o", provider: "OpenAI", context: "128K", capability: "Chat, Vision", tier: "Pro" },
+  { id: "2", name: "Claude 3.5 Sonnet", provider: "Anthropic", context: "200K", capability: "Chat, Vision", tier: "Pro" },
+  { id: "3", name: "Gemini 1.5 Pro", provider: "Google", context: "1M", capability: "Chat, Vision", tier: "Pro" },
+  { id: "4", name: "GPT-4o mini", provider: "OpenAI", context: "128K", capability: "Chat", tier: "Basic" },
+  { id: "5", name: "Claude 3 Haiku", provider: "Anthropic", context: "200K", capability: "Chat", tier: "Basic" },
+  { id: "6", name: "Llama 3.1 70B", provider: "Meta", context: "128K", capability: "Completion", tier: "Pro" },
+  { id: "7", name: "Mistral Large", provider: "Mistral", context: "128K", capability: "Chat, Function calling", tier: "Pro" },
 ];
 
 export default function LLMs() {
@@ -27,8 +22,6 @@ export default function LLMs() {
   const [sort, setSort] = useState("Name");
   const [provider, setProvider] = useState("All");
   const [capability, setCapability] = useState("All");
-  const [category, setCategory] = useState("All");
-  const [price, setPrice] = useState("All");
 
   const filtered = useMemo(() => {
     let list = [...mockModels];
@@ -43,14 +36,11 @@ export default function LLMs() {
     if (provider !== "All") list = list.filter((m) => m.provider === provider);
     if (capability !== "All")
       list = list.filter((m) => m.capability.toLowerCase().includes(capability.toLowerCase()));
-    if (category !== "All") list = list.filter((m) => m.category === category);
-    if (price !== "All") list = list.filter((m) => m.price === price);
     if (sort === "Name") list.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "Provider") list.sort((a, b) => a.provider.localeCompare(b.provider));
-    if (sort === "Context size") list.sort((a, b) => String(b.context).localeCompare(String(a.context)));
-    if (sort === "Price") list.sort((a, b) => PRICE_OPTIONS.indexOf(a.price) - PRICE_OPTIONS.indexOf(b.price));
+    if (sort === "Context size") list.sort((a, b) => b.context.localeCompare(a.context));
     return list;
-  }, [search, sort, provider, capability, category, price]);
+  }, [search, sort, provider, capability]);
 
   return (
     <div className="relative min-h-screen">
@@ -62,8 +52,8 @@ export default function LLMs() {
           className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold text-white">Language Models</h1>
-            <p className="mt-1 text-zinc-400">Browse and Use All Available Models from One Place.</p>
+            <h1 className="text-3xl font-bold text-white">Language models</h1>
+            <p className="mt-1 text-zinc-400">Browse and use all available models from one place.</p>
           </div>
         </motion.div>
 
@@ -99,34 +89,6 @@ export default function LLMs() {
                 {CAPABILITIES.map((c) => (
                   <option key={c} value={c}>
                     {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-400">Category</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-3 pr-8 text-zinc-200 focus:border-primary-500 focus:outline-none"
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-400">Price</label>
-              <select
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-3 pr-8 text-zinc-200 focus:border-primary-500 focus:outline-none"
-              >
-                {PRICE_OPTIONS.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
                   </option>
                 ))}
               </select>

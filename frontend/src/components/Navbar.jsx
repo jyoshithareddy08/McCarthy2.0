@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User, LogOut } from "lucide-react";
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { useAuth } from "../context/AuthContext";
+import SearchBar from "./SearchBar";
 
 const transition = { duration: 0.2 };
 
@@ -55,6 +56,11 @@ export default function Navbar() {
             );
           })}
         </nav>
+
+        {/* Search - desktop */}
+        <div className="hidden lg:block flex-1 max-w-xs mx-4">
+          <SearchBar compact placeholder="Search..." />
+        </div>
 
         {/* Right: Auth or user menu */}
         <div className="flex items-center gap-3">
@@ -134,6 +140,7 @@ export default function Navbar() {
             className="md:hidden border-t border-white/5 bg-[#0f0f12]/95 backdrop-blur-xl"
           >
             <div className="space-y-1 px-4 py-4">
+              <SearchBar placeholder="Search..." className="mb-4" />
               {navLinks.map(({ to, label }) => (
                 <Link
                   key={to}
