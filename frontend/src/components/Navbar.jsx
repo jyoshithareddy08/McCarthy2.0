@@ -9,10 +9,10 @@ import SearchBar from "./SearchBar";
 const transition = { duration: 0.2 };
 
 const navLinks = [
-  { to: "/", label: "Home" },
+  { to: "/", label: "HOME" },
   { to: "/llms", label: "LLMs" },
   { to: "/playground", label: "PLAYGROUND" },
-  { to: "/pipelines", label: "Pipelines" },
+  { to: "/pipelines", label: "PIPELINES" },
 ];
 
 export default function Navbar() {
@@ -34,11 +34,6 @@ export default function Navbar() {
       className="sticky top-0 z-50 border-b border-white/5 bg-[#0f0f12]/80 backdrop-blur-xl"
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link to="/" className="flex shrink-0 items-center gap-2">
-          <span className="text-xl font-bold tracking-tight text-white">MCCARTHY</span>
-        </Link>
-
         {/* Center nav - desktop */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map(({ to, label }) => {
@@ -113,13 +108,13 @@ export default function Navbar() {
                 to="/login"
                 className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
               >
-                Login
+                LOGIN
               </Link>
               <Link
                 to="/signup"
                 className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 transition-colors"
               >
-                Sign up
+                SIGN UP
               </Link>
             </div>
           )}
