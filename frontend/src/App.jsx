@@ -45,9 +45,13 @@ function Layout({ children }) {
   const isPlayground = location.pathname === "/playground";
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div
+      className={`flex flex-col ${isPlayground ? "h-screen overflow-hidden" : "min-h-screen"}`}
+    >
       <Navbar />
-      <main className="flex-1">
+      <main
+        className={`flex-1 ${isPlayground ? "min-h-0 overflow-hidden" : ""}`}
+      >
         <PageTransition>{children}</PageTransition>
       </main>
       {!isPlayground && <Footer />}
