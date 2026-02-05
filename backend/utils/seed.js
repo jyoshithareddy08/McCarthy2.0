@@ -79,7 +79,7 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop',
     title: 'GPT-4 Chat Assistant',
     description: 'Advanced conversational AI powered by GPT-4. Perfect for customer support, content generation, and interactive applications.',
-    apiEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
+    apiEndpoint: 'https://api.example.com/v1/chat/completions',
     provider: 'openai',
     models: ['openai/gpt-oss-120b'],
     apiHeaders: {
@@ -152,7 +152,7 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
     title: 'Whisper Speech-to-Text',
     description: 'Convert audio and video to accurate text transcripts using OpenAI Whisper. Supports multiple languages and audio formats.',
-    apiEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
+    apiEndpoint: 'https://api.example.com/v1/chat/completions',
     provider: 'openai',
     models: ['whisper-large-v3'],
     apiHeaders: {
@@ -176,7 +176,7 @@ const tools = await Tool.insertMany([
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
     title: 'LLaMA',
     description: 'Llama is a highly advanced language model, effortlessly bridging the gap between humans and technology through insightful conversations, creative expression, and a vast, ever-expanding knowledge base.',
-    apiEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
+    apiEndpoint: 'https://api.example.com/v1/chat/completions',
     provider: 'google',
     models: ['llama-3.3-70b-versatile', 'mixtral-8x7b-32768', 'gemma-7b-it'],
     apiHeaders: {
