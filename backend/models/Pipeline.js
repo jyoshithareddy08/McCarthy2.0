@@ -6,6 +6,10 @@ const pipelineSchema = new mongoose.Schema({
     ref: 'User',
     required: [true, 'User ID is required']
   },
+  name: {
+    type: String,
+    trim: true
+  },
   finalResponse: {
     type: String,
     default: null

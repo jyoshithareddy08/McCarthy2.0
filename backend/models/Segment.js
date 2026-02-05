@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const segmentSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    trim: true
+  },
   prompt: {
     type: String,
     required: [true, 'Prompt is required'],
