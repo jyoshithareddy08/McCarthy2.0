@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut, Plus } from "lucide-react";
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { useAuth } from "../context/AuthContext";
 
@@ -84,6 +84,18 @@ export default function Navbar() {
                     </button>
                   )}
                 </MenuItem>
+                {user?.role === "vendor" && (
+                  <MenuItem>
+                    {({ focus }) => (
+                      <button
+                        onClick={() => navigate("/publish-tool")}
+                        className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm ${focus ? "bg-white/5" : ""} text-primary-400`}
+                      >
+                        <Plus className="h-4 w-4" /> Publish Tool
+                      </button>
+                    )}
+                  </MenuItem>
+                )}
                 <MenuItem>
                   {({ focus }) => (
                     <button

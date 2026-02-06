@@ -75,3 +75,89 @@ export const listTools = async (req, res) => {
   }
 };
 
+/**
+ * Create a new tool (vendor only)
+ * POST /api/tools
+ */
+export const createTool = async (req, res) => {
+  try {
+    // Check if user is authenticated and is a vendor
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (req.user.role !== 'vendor') {
+      return res.status(403).json({ error: 'Only vendors can create tools' });
+    }
+
+    const {
+      title,
+      description,
+      apiKey,
+      apiEndpoint,
+      apiMethod = 'POST',
+      apiHeaders,
+      requestBodyTemplate,
+      responsePath,
+      provider = 'custom',
+      models = [],
+      keywords = [],
+      useCases = [],
+      alternatives = [],
+      image
+    } = req.body;
+
+    // Validate required fields
+    if (!title || !description || !apiKey || !apiEndpoint) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['title', 'description', 'apiKey', 'apiEndpoint']
+      });
+    }
+
+    // Validate models array
+    if (!Array.isArray(models) || models.length === 0) {
+      return res.status(400).json({ error: 'At least one model is required' });
+    }
+
+    // Create the tool
+    const tool = await Tool.create({
+      uploadedBy: req.user._id,
+      title: title.trim(),
+      description: description.trim(),
+      apiKey: apiKey.trim(),
+      apiEndpoint: apiEndpoint.trim(),
+      apiMethod,
+      apiHeaders: apiHeaders || null,
+      requestBodyTemplate: requestBodyTemplate || null,
+      responsePath: responsePath || null,
+      provider,
+      models: models.map(m => m.trim()).filter(m => m),
+      keywords: keywords.map(k => k.trim()).filter(k => k),
+      useCases: useCases.map(u => u.trim()).filter(u => u),
+      alternatives: alternatives.map(a => a.trim()).filter(a => a),
+      image: image || 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop'
+    });
+
+    // Return tool without API key
+    const toolResponse = tool.toObject();
+    delete toolResponse.apiKey;
+
+    res.status(201).json({
+      message: 'Tool created successfully',
+      tool: toolResponse
+    });
+  } catch (error) {
+    console.error('Error creating tool:', error);
+    
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: Object.values(error.errors).map(e => e.message)
+      });
+    }
+
+    res.status(500).json({ error: 'Failed to create tool', message: error.message });
+  }
+};
+

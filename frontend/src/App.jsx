@@ -14,6 +14,7 @@ import Playground from "./pages/Playground";
 import Pipelines from "./pages/Pipelines";
 import SharedPipeline from "./pages/SharedPipeline";
 import VendorRegister from "./pages/VendorRegister";
+import PublishTool from "./pages/PublishTool";
 import NotFound from "./pages/NotFound";
 
 const pageVariants = {
@@ -94,6 +95,7 @@ export default function App() {
           />
           <Route path="/pipelines/shared/:shareToken" element={<Layout><SharedPipeline /></Layout>} />
           <Route path="/vendor-register" element={<Layout><VendorRegister /></Layout>} />
+          <Route path="/publish-tool" element={<Layout><PublishTool /></Layout>} />
           <Route path="/404" element={<Layout><NotFound /></Layout>} />
           <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
