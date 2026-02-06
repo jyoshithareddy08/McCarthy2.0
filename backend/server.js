@@ -10,6 +10,7 @@ import segmentRoutes from './routes/segmentRoutes.js';
 import segmentRunRoutes from './routes/segmentRunRoutes.js';
 import toolRoutes from './routes/toolRoutes.js';
 import llmRoutes from './routes/llmRoutes.js';
+import playgroundRoutes from './features/playground/playground.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -43,6 +44,7 @@ app.use('/api/segments', segmentRoutes);
 app.use('/api/segment-runs', segmentRunRoutes);
 app.use('/api/tools', toolRoutes);
 app.use('/api/llms', llmRoutes);
+app.use('/api/playground', playgroundRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
