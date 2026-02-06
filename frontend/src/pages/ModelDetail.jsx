@@ -239,15 +239,17 @@ export default function ModelDetail() {
           <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
             <h2 className="text-lg font-semibold text-white mb-3">WRITE A REVIEW</h2>
             {!isAuthenticated ? (
-              <p className="text-zinc-400 text-sm mb-3">
-                You must be logged in to submit a review.
-              </p>
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary-500/20 border border-primary-500/50 px-4 py-2 text-sm font-medium text-primary-300 hover:bg-primary-500/30 transition-colors"
-              >
-                Log in to review
-              </Link>
+              <>
+                <p className="text-zinc-400 text-sm mb-3">
+                  You must be logged in to submit a review.
+                </p>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary-500/20 border border-primary-500/50 px-4 py-2 text-sm font-medium text-primary-300 hover:bg-primary-500/30 transition-colors"
+                >
+                  Log in to review
+                </Link>
+              </>
             ) : (
               <form onSubmit={handleSubmitReview} className="space-y-3">
                 <div>
