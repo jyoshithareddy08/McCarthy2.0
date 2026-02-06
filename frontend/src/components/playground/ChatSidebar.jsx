@@ -42,12 +42,16 @@ export default function ChatSidebar({ isOpen, onClose, onNewChat, onSelectSessio
   const fetchSessions = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Fetching sessions...");
+      console.log("[ChatSidebar] Fetching sessions...");
       const data = await api.get("/api/playground/sessions");
-      console.log("Sessions fetched:", data);
+      console.log("[ChatSidebar] Sessions fetched:", { count: data?.length || 0, data });
       setSessions(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Error fetching sessions:", err);
+      console.error("[ChatSidebar] Error fetching sessions:", {
+        message: err.message,
+        status: err.status,
+        details: err.details
+      });
       setSessions([]);
     } finally {
       setLoading(false);

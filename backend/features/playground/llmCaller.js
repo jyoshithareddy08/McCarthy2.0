@@ -1,21 +1,164 @@
 import axios from "axios";
 import { getEndpoint } from "../../config/toolEndpoints.js";
 
+/**
+ * Replace placeholders in template with actual values
+ */
+function replacePlaceholders(template, values) {
+  if (typeof template === 'string') {
+    let result = template;
+    for (const [key, value] of Object.entries(values)) {
+      const placeholder = `{{${key}}}`;
+      if (result.includes(placeholder)) {
+        result = result.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), String(value || ''));
+      }
+    }
+    return result;
+  } else if (Array.isArray(template)) {
+    return template.map(item => replacePlaceholders(item, values));
+  } else if (template && typeof template === 'object') {
+    const result = {};
+    for (const [key, value] of Object.entries(template)) {
+      result[key] = replacePlaceholders(value, values);
+    }
+    return result;
+  }
+  return template;
+}
+
+/**
+ * Get nested value from object using dot notation path
+ */
+function getNestedValue(obj, path) {
+  const keys = path.split(/[\.\[\]]/).filter(k => k);
+  let value = obj;
+  for (const key of keys) {
+    if (value == null) return null;
+    value = value[key];
+  }
+  return value;
+}
+
 export const callLLM = async (tool, prompt) => {
   const endpoint = getEndpoint(tool) || tool.apiEndpoint;
   if (!endpoint) {
     throw new Error(`No API endpoint configured for tool "${tool?.title}". Set PLAYGROUND_LLM_ENDPOINT or TOOL_ENDPOINT_* in env.`);
   }
 
-  const response = await axios.post(
+  if (!tool.apiKey) {
+    throw new Error(`API key not found for tool: ${tool.title}`);
+  }
+
+  // Get the model to use - first from tool.models array, or empty string
+  const modelToUse = tool.models && tool.models.length > 0 ? tool.models[0] : '';
+  
+  console.log(`[callLLM] Calling ${tool.title}`, {
     endpoint,
-    { prompt },
-    {
-      headers: {
-        Authorization: `Bearer ${tool.apiKey}`
+    model: modelToUse,
+    hasApiKey: !!tool.apiKey,
+    hasRequestBodyTemplate: !!tool.requestBodyTemplate,
+    hasResponsePath: !!tool.responsePath
+  });
+
+  // Build headers
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(tool.apiHeaders || {})
+  };
+
+  // Replace API key placeholder in headers if present
+  Object.keys(headers).forEach(key => {
+    if (typeof headers[key] === 'string') {
+      headers[key] = headers[key].replace('{{apiKey}}', tool.apiKey);
+    }
+  });
+
+  // If Authorization header is not set, try to add it
+  if (!headers['Authorization'] && !headers['authorization'] && !headers['x-api-key']) {
+    // Default to Bearer token if no auth header specified
+    headers['Authorization'] = `Bearer ${tool.apiKey}`;
+  }
+
+  // Build request body
+  let requestBody;
+  
+  if (tool.requestBodyTemplate && Object.keys(tool.requestBodyTemplate).length > 0) {
+    // Use the template from database
+    const values = {
+      apiKey: tool.apiKey,
+      prompt: prompt || '',
+      inputText: prompt || '', // For compatibility
+      model: modelToUse,
+      inputFiles: []
+    };
+    requestBody = replacePlaceholders(tool.requestBodyTemplate, values);
+    console.log(`[callLLM] Using requestBodyTemplate:`, JSON.stringify(requestBody, null, 2));
+  } else {
+    // Default format for Groq/OpenAI-compatible APIs
+    // Groq API format: { model: "...", messages: [{ role: "user", content: "..." }] }
+    if (endpoint.includes('groq.com') || endpoint.includes('openai.com') || modelToUse) {
+      requestBody = {
+        model: modelToUse || 'llama-3.3-70b-versatile', // Default Groq model
+        messages: [
+          { role: 'user', content: prompt }
+        ]
+      };
+    } else {
+      // Fallback simple format
+      requestBody = {
+        prompt: prompt,
+        ...(modelToUse && { model: modelToUse })
+      };
+    }
+    console.log(`[callLLM] Using default request body:`, JSON.stringify(requestBody, null, 2));
+  }
+
+  try {
+    const response = await axios.post(
+      endpoint,
+      requestBody,
+      { headers }
+    );
+
+    console.log(`[callLLM] Response received:`, {
+      status: response.status,
+      hasData: !!response.data,
+      responseKeys: response.data ? Object.keys(response.data) : []
+    });
+
+    // Extract response using responsePath if specified
+    if (tool.responsePath) {
+      const extracted = getNestedValue(response.data, tool.responsePath);
+      if (extracted != null) {
+        return extracted;
       }
     }
-  );
 
-  return response.data.output || response.data;
+    // Try common response patterns
+    const output = response.data.output || 
+                   response.data.text || 
+                   response.data.content || 
+                   response.data.choices?.[0]?.message?.content ||
+                   response.data.choices?.[0]?.text ||
+                   response.data;
+
+    return typeof output === 'string' ? output : JSON.stringify(output);
+  } catch (error) {
+    console.error(`[callLLM] Error calling ${tool.title}:`, {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      endpoint,
+      requestBody: JSON.stringify(requestBody, null, 2)
+    });
+    
+    if (error.response?.data) {
+      const errorMsg = error.response.data.error?.message || 
+                      error.response.data.message || 
+                      error.response.data.error ||
+                      error.message;
+      throw new Error(`API Error: ${errorMsg}`);
+    }
+    throw error;
+  }
 };

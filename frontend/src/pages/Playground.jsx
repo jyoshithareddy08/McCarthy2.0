@@ -52,11 +52,82 @@ export default function Playground() {
       let sid = sessionId;
       const isNewSession = !sid;
       if (!sid) {
-        const session = await api.post("/api/playground/session", {});
-        sid = session._id;
-        setSessionId(sid);
-        // Trigger session list refresh
-        setRefreshSessions((prev) => prev + 1);
+        console.log("[Playground] Creating new session...");
+        try {
+          const session = await api.post("/api/playground/session", {});
+          sid = session._id;
+          setSessionId(sid);
+          console.log("[Playground] Session created:", sid);
+          // Trigger session list refresh
+          setRefreshSessions((prev) => prev + 1);
+        } catch (sessionErr) {
+          console.error("[Playground] Error creating session:", sessionErr);
+          // Show detailed error for session creation failure
+          const sessionErrorDetails = [];
+          sessionErrorDetails.push(`❌ Failed to create chat session`);
+          sessionErrorDetails.push("");
+          sessionErrorDetails.push(`Error: ${sessionErr.message}`);
+          
+          if (sessionErr.status) {
+            sessionErrorDetails.push(`Status Code: ${sessionErr.status}`);
+          }
+          
+          if (sessionErr.backendError || sessionErr.backendMessage) {
+            sessionErrorDetails.push("");
+            sessionErrorDetails.push("🔍 Backend Response:");
+            if (sessionErr.backendError) {
+              sessionErrorDetails.push(`   Error: ${sessionErr.backendError}`);
+            }
+            if (sessionErr.backendMessage) {
+              sessionErrorDetails.push(`   Message: ${sessionErr.backendMessage}`);
+            }
+          }
+          
+          if (sessionErr.backendDetails && typeof sessionErr.backendDetails === 'object') {
+            sessionErrorDetails.push("");
+            sessionErrorDetails.push("📋 Details:");
+            Object.entries(sessionErr.backendDetails).forEach(([key, value]) => {
+              sessionErrorDetails.push(`   ${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`);
+            });
+          }
+          
+          // Check authentication
+          if (sessionErr.status === 401 || sessionErr.message?.includes("User context") || sessionErr.message?.includes("X-User-Id")) {
+            const user = localStorage.getItem("mccarthy_user");
+            let userId = null;
+            try {
+              if (user) {
+                const parsed = JSON.parse(user);
+                userId = parsed?.id || parsed?._id;
+              }
+            } catch (e) {}
+            
+            sessionErrorDetails.push("");
+            sessionErrorDetails.push("🔐 Authentication Status:");
+            const tokens = localStorage.getItem("mccarthy_tokens");
+            let hasToken = false;
+            try {
+              if (tokens) {
+                const parsed = JSON.parse(tokens);
+                hasToken = !!parsed?.accessToken;
+              }
+            } catch (e) {}
+            sessionErrorDetails.push(`   - JWT Token: ${hasToken ? "✅ Found" : "❌ NOT FOUND"}`);
+            sessionErrorDetails.push("");
+            sessionErrorDetails.push("💡 Solution: Please log in to use the playground");
+          }
+          
+          setMessages((m) => [
+            ...m,
+            {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: sessionErrorDetails.join("\n"),
+            },
+          ]);
+          setIsTyping(false);
+          return; // Stop here, don't try to send message
+        }
       }
 
       const body = {
@@ -82,12 +153,108 @@ export default function Playground() {
         setTimeout(() => setRefreshSessions((prev) => prev + 1), 500);
       }
     } catch (err) {
+      console.error("[Playground] Error in handleSend:", err);
+      const errorDetails = [];
+      
+      // Main error message
+      errorDetails.push(`❌ Error: ${err.message}`);
+      errorDetails.push("");
+      
+      // Status code
+      if (err.status) {
+        errorDetails.push(`📊 Status Code: ${err.status}`);
+      }
+      
+      // Backend error details
+      if (err.backendError || err.backendMessage) {
+        errorDetails.push("");
+        errorDetails.push("🔍 Backend Response:");
+        if (err.backendError) {
+          errorDetails.push(`   Error: ${err.backendError}`);
+        }
+        if (err.backendMessage) {
+          errorDetails.push(`   Message: ${err.backendMessage}`);
+        }
+      }
+      
+      // Detailed backend information
+      if (err.backendDetails && typeof err.backendDetails === 'object') {
+        errorDetails.push("");
+        errorDetails.push("📋 Detailed Information:");
+        Object.entries(err.backendDetails).forEach(([key, value]) => {
+          if (typeof value === 'object') {
+            errorDetails.push(`   ${key}:`);
+            Object.entries(value).forEach(([subKey, subValue]) => {
+              errorDetails.push(`     - ${subKey}: ${subValue}`);
+            });
+          } else {
+            errorDetails.push(`   ${key}: ${value}`);
+          }
+        });
+      }
+      
+      // Endpoint information
+      if (err.details?.path) {
+        errorDetails.push("");
+        errorDetails.push(`🌐 Endpoint: ${err.details.path}`);
+      }
+      
+      // Check if user ID is missing
+      if (err.message?.includes("User context") || err.message?.includes("X-User-Id") || err.status === 401) {
+        const user = localStorage.getItem("mccarthy_user");
+        let userId = null;
+        try {
+          if (user) {
+            const parsed = JSON.parse(user);
+            userId = parsed?.id || parsed?._id;
+          }
+        } catch (e) {
+          console.error("Error parsing user:", e);
+        }
+        
+        errorDetails.push("");
+        errorDetails.push("🔐 Authentication Debug:");
+        const tokens = localStorage.getItem("mccarthy_tokens");
+        let hasToken = false;
+        try {
+          if (tokens) {
+            const parsed = JSON.parse(tokens);
+            hasToken = !!parsed?.accessToken;
+          }
+        } catch (e) {}
+        errorDetails.push(`   - JWT Token: ${hasToken ? "✅ Found" : "❌ NOT FOUND"}`);
+        if (hasToken) {
+          errorDetails.push(`   - Token may be expired or invalid`);
+        }
+        errorDetails.push("");
+        errorDetails.push("💡 Solution:");
+        errorDetails.push("   Please log in to use the playground");
+      }
+      
+      // Check for validation errors
+      if (err.status === 400 && err.backendDetails) {
+        errorDetails.push("");
+        errorDetails.push("⚠️ Validation Error:");
+        if (err.backendDetails.hasSessionId === false) {
+          errorDetails.push("   - Session ID is missing");
+        }
+        if (err.backendDetails.hasPrompt === false) {
+          errorDetails.push("   - Prompt is missing");
+        }
+        if (err.backendDetails.providedSessionId) {
+          errorDetails.push(`   - Invalid Session ID format: ${err.backendDetails.providedSessionId}`);
+        }
+        if (err.backendDetails.providedToolId) {
+          errorDetails.push(`   - Invalid Tool ID format: ${err.backendDetails.providedToolId}`);
+        }
+      }
+      
       setMessages((m) => [
         ...m,
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: `Error: ${err.message}`,
+          content: errorDetails.join("\n"),
         },
       ]);
     } finally {
@@ -164,11 +331,48 @@ export default function Playground() {
             // Refresh sessions list to ensure titles are up to date
             setRefreshSessions((prev) => prev + 1);
           } catch (err) {
-            console.error("Error loading session:", err);
+            console.error("[Playground] Error loading session:", err);
+            const errorDetails = [];
+            errorDetails.push(`Error loading chat history: ${err.message}`);
+            
+            if (err.status) {
+              errorDetails.push(`Status Code: ${err.status}`);
+            }
+            
+            if (err.details) {
+              if (err.details.error) {
+                errorDetails.push(`Backend Error: ${err.details.error}`);
+              }
+              if (err.details.message) {
+                errorDetails.push(`Message: ${err.details.message}`);
+              }
+              if (err.details.path) {
+                errorDetails.push(`Endpoint: ${err.details.path}`);
+              }
+            }
+            
+            // Check if authentication is missing
+            if (err.message?.includes("Authentication") || err.message?.includes("User context") || err.status === 401) {
+              const tokens = localStorage.getItem("mccarthy_tokens");
+              let hasToken = false;
+              try {
+                if (tokens) {
+                  const parsed = JSON.parse(tokens);
+                  hasToken = !!parsed?.accessToken;
+                }
+              } catch (e) {}
+              errorDetails.push(`\n🔐 Authentication Debug:`);
+              errorDetails.push(`- JWT Token: ${hasToken ? "✅ Found" : "❌ NOT FOUND"}`);
+              if (hasToken) {
+                errorDetails.push(`- Token may be expired or invalid`);
+              }
+              errorDetails.push(`\n💡 Solution: Please log in to use the playground`);
+            }
+            
             setMessages([{
               id: "error",
               role: "assistant",
-              content: `Error loading chat history: ${err.message}`,
+              content: errorDetails.join("\n"),
             }]);
             setHasStartedChat(true);
           } finally {
