@@ -64,7 +64,10 @@ export const getTools = async (req, res) => {
 export const getHistory = async (req, res) => {
   try {
     const { sessionId } = req.params;
+    console.log("getHistory called with sessionId:", sessionId);
+    
     if (!sessionId || !mongoose.Types.ObjectId.isValid(sessionId)) {
+      console.error("Invalid sessionId:", sessionId);
       return res.status(400).json({ error: "Invalid sessionId" });
     }
 
@@ -72,8 +75,10 @@ export const getHistory = async (req, res) => {
       .sort({ createdAt: 1 })
       .lean();
 
+    console.log(`Found ${messages.length} messages for session ${sessionId}`);
     res.json(messages);
   } catch (err) {
+    console.error("Error in getHistory:", err);
     res.status(500).json({ error: err.message });
   }
 };

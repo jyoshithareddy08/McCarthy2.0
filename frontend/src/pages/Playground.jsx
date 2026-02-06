@@ -21,6 +21,7 @@ export default function Playground() {
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [refreshSessions, setRefreshSessions] = useState(0);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -49,10 +50,13 @@ export default function Playground() {
 
     try {
       let sid = sessionId;
+      const isNewSession = !sid;
       if (!sid) {
         const session = await api.post("/api/playground/session", {});
         sid = session._id;
         setSessionId(sid);
+        // Trigger session list refresh
+        setRefreshSessions((prev) => prev + 1);
       }
 
       const body = {
@@ -72,6 +76,11 @@ export default function Playground() {
           content: result.response || "[No response]",
         },
       ]);
+      
+      // Refresh sessions list after first message to update title
+      if (isNewSession) {
+        setTimeout(() => setRefreshSessions((prev) => prev + 1), 500);
+      }
     } catch (err) {
       setMessages((m) => [
         ...m,
@@ -94,6 +103,8 @@ export default function Playground() {
       <ChatSidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        currentSessionId={sessionId}
+        refreshTrigger={refreshSessions}
         onNewChat={() => {
           setMessages([]);
           setHasStartedChat(false);
@@ -103,29 +114,63 @@ export default function Playground() {
         }}
         onSelectSession={async (selectedSessionId) => {
           try {
-            setSessionId(selectedSessionId);
+            // Ensure sessionId is a string
+            const sessionIdStr = String(selectedSessionId);
+            console.log("Loading session:", sessionIdStr);
+            // Clear previous messages and set loading state
+            setMessages([]);
+            setSessionId(sessionIdStr);
             setHasStartedChat(true);
             setIsTyping(true);
-            const history = await api.get(`/api/playground/history/${selectedSessionId}`);
+            
+            const history = await api.get(`/api/playground/history/${sessionIdStr}`);
+            console.log("History received:", history);
+            
+            if (!Array.isArray(history)) {
+              console.error("History is not an array:", history);
+              setMessages([]);
+              setIsTyping(false);
+              return;
+            }
+            
+            if (history.length === 0) {
+              console.log("No messages found for this session");
+              setMessages([]);
+              setIsTyping(false);
+              return;
+            }
+            
             const formattedMessages = [];
-            history.forEach((msg) => {
-              formattedMessages.push({
-                id: `user-${msg._id}`,
-                role: "user",
-                content: msg.prompt,
-              });
+            history.forEach((msg, index) => {
+              if (msg.prompt) {
+                formattedMessages.push({
+                  id: `user-${msg._id || index}`,
+                  role: "user",
+                  content: msg.prompt,
+                });
+              }
               if (msg.response) {
                 formattedMessages.push({
-                  id: `assistant-${msg._id}`,
+                  id: `assistant-${msg._id || index}`,
                   role: "assistant",
                   content: msg.response,
                 });
               }
             });
+            
+            console.log("Formatted messages:", formattedMessages);
             setMessages(formattedMessages);
             setSidebarOpen(false);
+            // Refresh sessions list to ensure titles are up to date
+            setRefreshSessions((prev) => prev + 1);
           } catch (err) {
             console.error("Error loading session:", err);
+            setMessages([{
+              id: "error",
+              role: "assistant",
+              content: `Error loading chat history: ${err.message}`,
+            }]);
+            setHasStartedChat(true);
           } finally {
             setIsTyping(false);
           }

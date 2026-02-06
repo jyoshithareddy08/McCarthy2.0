@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, MessageSquare, ChevronRight, Menu, X } from "lucide-react";
 import { api } from "../../lib/api.js";
@@ -23,7 +23,7 @@ function useMediaQuery(query) {
   return matches;
 }
 
-export default function ChatSidebar({ isOpen, onClose, onNewChat, onSelectSession, expanded: controlledExpanded, onExpandedChange }) {
+export default function ChatSidebar({ isOpen, onClose, onNewChat, onSelectSession, expanded: controlledExpanded, onExpandedChange, currentSessionId, refreshTrigger }) {
   const [internalExpanded, setInternalExpanded] = useState(true);
   const expanded = (onExpandedChange != null ? controlledExpanded : internalExpanded) ?? true;
   const setExpanded = (valueOrUpdater) => {
@@ -39,21 +39,35 @@ export default function ChatSidebar({ isOpen, onClose, onNewChat, onSelectSessio
   const showInnerContent = (isMobile && isOpen) || (!isMobile && expanded);
 
   // Fetch sessions from API
-  useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        setLoading(true);
-        const data = await api.get("/api/playground/sessions");
-        setSessions(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Error fetching sessions:", err);
-        setSessions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSessions();
+  const fetchSessions = useCallback(async () => {
+    try {
+      setLoading(true);
+      console.log("Fetching sessions...");
+      const data = await api.get("/api/playground/sessions");
+      console.log("Sessions fetched:", data);
+      setSessions(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching sessions:", err);
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Fetch sessions on mount and when sidebar opens/expands
+  useEffect(() => {
+    if (showInnerContent) {
+      fetchSessions();
+    }
+  }, [showInnerContent, fetchSessions]);
+
+  // Refresh sessions when refreshTrigger changes (e.g., after new chat or message)
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      console.log("Refresh trigger activated:", refreshTrigger);
+      fetchSessions();
+    }
+  }, [refreshTrigger, fetchSessions]);
 
   // Filter sessions based on search
   const filteredSessions = sessions.filter((session) =>
@@ -141,23 +155,30 @@ export default function ChatSidebar({ isOpen, onClose, onNewChat, onSelectSessio
                         {search ? "No chats match your search" : "No recent chats"}
                       </li>
                     ) : (
-                      filteredSessions.map((session) => (
-                        <li key={session._id}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onSelectSession) {
-                                onSelectSession(session._id);
-                              }
-                              if (isMobile) onClose();
-                            }}
-                            className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/5 hover:text-white transition-colors"
-                          >
-                            {session.chatTitle || "Untitled Chat"}
-                            <ChevronRight className="h-4 w-4 text-zinc-500" />
-                          </button>
-                        </li>
-                      ))
+                      filteredSessions.map((session) => {
+                        const isActive = currentSessionId === session._id;
+                        return (
+                          <li key={session._id}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onSelectSession) {
+                                  onSelectSession(session._id);
+                                }
+                                if (isMobile) onClose();
+                              }}
+                              className={`flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm transition-colors ${
+                                isActive
+                                  ? "bg-primary-500/20 text-primary-300 hover:bg-primary-500/30"
+                                  : "text-zinc-300 hover:bg-white/5 hover:text-white"
+                              }`}
+                            >
+                              <span className="truncate flex-1">{session.chatTitle || "Untitled Chat"}</span>
+                              <ChevronRight className={`h-4 w-4 shrink-0 ml-2 ${isActive ? "text-primary-400" : "text-zinc-500"}`} />
+                            </button>
+                          </li>
+                        );
+                      })
                     )}
                   </ul>
                 </section>
