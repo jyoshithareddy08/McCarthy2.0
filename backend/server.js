@@ -4,7 +4,12 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 import './models/index.js'; // Import all models to register them
-import playgroundRoutes from './features/playground/playground.routes.js';
+import authRoutes from './routes/authRoutes.js';
+import pipelineRoutes from './routes/pipelineRoutes.js';
+import segmentRoutes from './routes/segmentRoutes.js';
+import segmentRunRoutes from './routes/segmentRunRoutes.js';
+import toolRoutes from './routes/toolRoutes.js';
+import llmRoutes from './routes/llmRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -31,8 +36,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Playground routes (requires X-User-Id header or PLAYGROUND_DEMO_USER_ID in env)
-app.use('/api/playground', playgroundRoutes);
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/pipelines', pipelineRoutes);
+app.use('/api/segments', segmentRoutes);
+app.use('/api/segment-runs', segmentRunRoutes);
+app.use('/api/tools', toolRoutes);
+app.use('/api/llms', llmRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

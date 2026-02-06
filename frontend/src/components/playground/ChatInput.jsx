@@ -1,11 +1,14 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
 import { Send } from "lucide-react";
+import ModelSelector from "./ModelSelector";
 
 export default function ChatInput({
   value,
   onChange,
   onSubmit,
+  model,
+  onModelChange,
   disabled,
   placeholder = "Type your message...",
 }) {
@@ -21,15 +24,18 @@ export default function ChatInput({
     <form onSubmit={handleSubmit} className="w-full max-w-3xl">
       <motion.div
         layout
-        className="relative flex items-end gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-2 shadow-lg backdrop-blur-xl focus-within:border-primary-500/40 focus-within:shadow-primary-500/10 transition-all duration-300"
+        className="relative flex items-end gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2 shadow-lg backdrop-blur-xl focus-within:border-primary-500/40 focus-within:shadow-primary-500/10 transition-all duration-300"
       >
+        <div className="absolute left-3 bottom-2.5 flex items-center gap-2">
+          <ModelSelector value={model} onChange={onModelChange} />
+        </div>
         <input
           ref={inputRef}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="min-h-[44px] flex-1 bg-transparent pr-12 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-none"
+          className="min-h-[44px] flex-1 bg-transparent pl-28 pr-12 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-none"
         />
         <motion.button
           type="submit"
