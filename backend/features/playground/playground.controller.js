@@ -77,3 +77,19 @@ export const getHistory = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getSessions = async (req, res) => {
+  try {
+    const sessions = await Session.find({ 
+      userId: req.user.id,
+      type: "playground"
+    })
+      .sort({ createdAt: -1 })
+      .select("_id chatTitle createdAt")
+      .lean();
+
+    res.json(sessions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

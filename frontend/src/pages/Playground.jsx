@@ -101,6 +101,35 @@ export default function Playground() {
           setModelUsed(null);
           setSidebarOpen(false);
         }}
+        onSelectSession={async (selectedSessionId) => {
+          try {
+            setSessionId(selectedSessionId);
+            setHasStartedChat(true);
+            setIsTyping(true);
+            const history = await api.get(`/api/playground/history/${selectedSessionId}`);
+            const formattedMessages = [];
+            history.forEach((msg) => {
+              formattedMessages.push({
+                id: `user-${msg._id}`,
+                role: "user",
+                content: msg.prompt,
+              });
+              if (msg.response) {
+                formattedMessages.push({
+                  id: `assistant-${msg._id}`,
+                  role: "assistant",
+                  content: msg.response,
+                });
+              }
+            });
+            setMessages(formattedMessages);
+            setSidebarOpen(false);
+          } catch (err) {
+            console.error("Error loading session:", err);
+          } finally {
+            setIsTyping(false);
+          }
+        }}
         expanded={sidebarExpanded}
         onExpandedChange={setSidebarExpanded}
       />

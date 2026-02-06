@@ -1,23 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, MessageSquare, FolderOpen, ChevronRight, ChevronDown, Menu, X } from "lucide-react";
+import { Search, Plus, MessageSquare, ChevronRight, Menu, X } from "lucide-react";
+import { api } from "../../lib/api.js";
 
 const overlayVariants = {
   hidden: { opacity: 0, pointerEvents: "none" },
   visible: { opacity: 1, pointerEvents: "auto" },
   exit: { opacity: 0, pointerEvents: "none" },
 };
-
-const recentChats = [
-  { id: "1", title: "Summarize doc" },
-  { id: "2", title: "Code review" },
-  { id: "3", title: "Marketing copy" },
-];
-
-const savedChats = [
-  { id: "s1", title: "API design" },
-  { id: "s2", title: "Blog outline" },
-];
 
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(() =>
@@ -33,7 +23,7 @@ function useMediaQuery(query) {
   return matches;
 }
 
-export default function ChatSidebar({ isOpen, onClose, onNewChat, expanded: controlledExpanded, onExpandedChange }) {
+export default function ChatSidebar({ isOpen, onClose, onNewChat, onSelectSession, expanded: controlledExpanded, onExpandedChange }) {
   const [internalExpanded, setInternalExpanded] = useState(true);
   const expanded = (onExpandedChange != null ? controlledExpanded : internalExpanded) ?? true;
   const setExpanded = (valueOrUpdater) => {
@@ -42,10 +32,33 @@ export default function ChatSidebar({ isOpen, onClose, onNewChat, expanded: cont
     else setInternalExpanded(next);
   };
   const [search, setSearch] = useState("");
-  const [savedOpen, setSavedOpen] = useState(true);
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const isMobile = useMediaQuery("(max-width: 767px)");
   const showContent = isMobile ? isOpen : expanded;
   const showInnerContent = (isMobile && isOpen) || (!isMobile && expanded);
+
+  // Fetch sessions from API
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        setLoading(true);
+        const data = await api.get("/api/playground/sessions");
+        setSessions(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching sessions:", err);
+        setSessions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSessions();
+  }, []);
+
+  // Filter sessions based on search
+  const filteredSessions = sessions.filter((session) =>
+    session.chatTitle?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <>
@@ -117,60 +130,35 @@ export default function ChatSidebar({ isOpen, onClose, onNewChat, expanded: cont
 
               <div className="space-y-6 overflow-y-auto">
                 <section>
-                  <button
-                    type="button"
-                    onClick={() => setSavedOpen((o) => !o)}
-                    className="mb-2 flex w-full items-center gap-2 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-400"
-                  >
-                    <FolderOpen className="h-3.5 w-3.5 shrink-0" /> Saved
-                    <motion.span
-                      animate={{ rotate: savedOpen ? 0 : -90 }}
-                      transition={{ duration: 0.2 }}
-                      className="ml-auto"
-                    >
-                      <ChevronDown className="h-4 w-4" />
-                    </motion.span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {savedOpen && (
-                      <motion.ul
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="space-y-0.5 overflow-hidden"
-                      >
-                        {savedChats.map((chat) => (
-                          <li key={chat.id}>
-                            <button
-                              type="button"
-                              className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/5 hover:text-white transition-colors"
-                            >
-                              {chat.title}
-                              <ChevronRight className="h-4 w-4 text-zinc-500" />
-                            </button>
-                          </li>
-                        ))}
-                      </motion.ul>
-                    )}
-                  </AnimatePresence>
-                </section>
-                <section>
                   <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
                     <MessageSquare className="h-3.5 w-3.5" /> Recent
                   </h3>
                   <ul className="space-y-0.5">
-                    {recentChats.map((chat) => (
-                      <li key={chat.id}>
-                        <button
-                          type="button"
-                          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/5 hover:text-white transition-colors"
-                        >
-                          {chat.title}
-                          <ChevronRight className="h-4 w-4 text-zinc-500" />
-                        </button>
+                    {loading ? (
+                      <li className="px-2 py-2 text-xs text-zinc-500">Loading...</li>
+                    ) : filteredSessions.length === 0 ? (
+                      <li className="px-2 py-2 text-xs text-zinc-500">
+                        {search ? "No chats match your search" : "No recent chats"}
                       </li>
-                    ))}
+                    ) : (
+                      filteredSessions.map((session) => (
+                        <li key={session._id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onSelectSession) {
+                                onSelectSession(session._id);
+                              }
+                              if (isMobile) onClose();
+                            }}
+                            className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/5 hover:text-white transition-colors"
+                          >
+                            {session.chatTitle || "Untitled Chat"}
+                            <ChevronRight className="h-4 w-4 text-zinc-500" />
+                          </button>
+                        </li>
+                      ))
+                    )}
                   </ul>
                 </section>
               </div>
