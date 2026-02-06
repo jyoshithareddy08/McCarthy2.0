@@ -29,6 +29,11 @@ const segmentSchema = new mongoose.Schema({
     type: String,
     enum: ['initial', 'previous'],
     default: 'previous'
+  },
+  model: {
+    type: String,
+    trim: true,
+    default: null // Optional: specific model to use for this segment (must be in tool.models array)
   }
 }, {
   timestamps: true

@@ -9,8 +9,10 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import LLMs from "./pages/LLMs";
+import ModelDetail from "./pages/ModelDetail";
 import Playground from "./pages/Playground";
 import Pipelines from "./pages/Pipelines";
+import SharedPipeline from "./pages/SharedPipeline";
 import VendorRegister from "./pages/VendorRegister";
 import NotFound from "./pages/NotFound";
 
@@ -78,8 +80,19 @@ export default function App() {
             }
           />
           <Route path="/llms" element={<Layout><LLMs /></Layout>} />
+          <Route path="/llms/:id" element={<Layout><ModelDetail /></Layout>} />
           <Route path="/playground" element={<Layout><Playground /></Layout>} />
-          <Route path="/pipelines" element={<Layout><Pipelines /></Layout>} />
+          <Route 
+            path="/pipelines" 
+            element={
+              <Layout>
+                <ProtectedRoute>
+                  <Pipelines />
+                </ProtectedRoute>
+              </Layout>
+            } 
+          />
+          <Route path="/pipelines/shared/:shareToken" element={<Layout><SharedPipeline /></Layout>} />
           <Route path="/vendor-register" element={<Layout><VendorRegister /></Layout>} />
           <Route path="/404" element={<Layout><NotFound /></Layout>} />
           <Route path="*" element={<Navigate to="/404" replace />} />

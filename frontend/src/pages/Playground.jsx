@@ -20,6 +20,7 @@ export default function Playground() {
   const [toolsLoading, setToolsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -100,6 +101,8 @@ export default function Playground() {
           setModelUsed(null);
           setSidebarOpen(false);
         }}
+        expanded={sidebarExpanded}
+        onExpandedChange={setSidebarExpanded}
       />
 
       {/* Main area: flex row - content + right panel */}
@@ -129,10 +132,10 @@ export default function Playground() {
               {hasStartedChat ? (
                 <motion.div
                   key="messages"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
                   className="flex flex-1 flex-col min-h-0 overflow-hidden"
                 >
                   <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-6 pb-4 pt-10 sm:pt-12 w-full max-w-3xl mx-auto scrollbar-hide">
@@ -164,7 +167,7 @@ export default function Playground() {
                     </AnimatePresence>
                     <div ref={bottomRef} />
                   </div>
-                  {/* Input bar: comfortable spacing from bottom of viewport */}
+                  {/* Input bar: anchored to bottom of page */}
                   <motion.div
                     layout
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -180,7 +183,7 @@ export default function Playground() {
                   </motion.div>
                 </motion.div>
               ) : (
-                /* Empty state: motivating text + centered input */
+                /* Empty state: text + input centered in viewport (compensate for sidebar offset on desktop) */
                 <motion.div
                   key="empty"
                   initial={{ opacity: 0 }}
@@ -193,7 +196,7 @@ export default function Playground() {
                       READY WHEN YOU ARE..
                     </h2>
                   </div>
-                  <div className="w-full max-w-3xl">
+                  <div className="w-full max-w-3xl px-4">
                     <ChatInput
                       value={input}
                       onChange={setInput}

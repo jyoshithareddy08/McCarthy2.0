@@ -5,6 +5,7 @@ import Tool from './Tool.js';
 import Segment from './Segment.js';
 import Pipeline from './Pipeline.js';
 import SegmentRun from './SegmentRun.js';
+import RefreshToken from './RefreshToken.js';
 
-export { User, Session, Message, Tool, Segment, Pipeline, SegmentRun };
+export { User, Session, Message, Tool, Segment, Pipeline, SegmentRun, RefreshToken };
 

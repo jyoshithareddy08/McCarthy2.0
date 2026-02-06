@@ -18,20 +18,28 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    
+    if (!name.trim()) {
+      setError("Please enter your name.");
+      return;
+    }
+    
     if (!email.trim()) {
       setError("Please enter your email.");
       return;
     }
-    if (!password || password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    
+    if (!password || password.length < 6) {
+      setError("Password must be at least 6 characters.");
       return;
     }
+    
     setLoading(true);
     try {
-      signup(email, password, name || undefined);
+      await signup(email, password, name);
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

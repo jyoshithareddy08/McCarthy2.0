@@ -56,6 +56,16 @@ userSchema.pre('save', async function(next) {
 
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
+  // Check if password is already hashed (starts with $2a$, $2b$, or $2y$)
+  const isHashed = /^\$2[ayb]\$.{56}$/.test(this.password);
+  
+  if (!isHashed) {
+    // If password is plain text (legacy), compare directly
+    // This handles existing users with plain text passwords
+    return this.password === candidatePassword;
+  }
+  
+  // If password is hashed, use bcrypt to compare
   return await bcrypt.compare(candidatePassword, this.password);
 };
 

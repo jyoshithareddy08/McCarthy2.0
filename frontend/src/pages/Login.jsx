@@ -19,16 +19,23 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    
     if (!email.trim()) {
       setError("Please enter your email.");
       return;
     }
+    
+    if (!password) {
+      setError("Please enter your password.");
+      return;
+    }
+    
     setLoading(true);
     try {
-      login(email, password);
+      await login(email, password);
       navigate(from, { replace: true });
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
