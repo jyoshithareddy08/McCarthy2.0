@@ -40,7 +40,8 @@ function getNestedValue(obj, path) {
 }
 
 export const callLLM = async (tool, prompt) => {
-  const endpoint = getEndpoint(tool) || tool.apiEndpoint;
+  // Prefer DB-configured endpoint. Env-based endpoint is only a fallback for legacy setups.
+  const endpoint = tool.apiEndpoint || getEndpoint(tool);
   if (!endpoint) {
     throw new Error(`No API endpoint configured for tool "${tool?.title}". Set PLAYGROUND_LLM_ENDPOINT or TOOL_ENDPOINT_* in env.`);
   }
@@ -94,21 +95,24 @@ export const callLLM = async (tool, prompt) => {
     requestBody = replacePlaceholders(tool.requestBodyTemplate, values);
     console.log(`[callLLM] Using requestBodyTemplate:`, JSON.stringify(requestBody, null, 2));
   } else {
-    // Default format for Groq/OpenAI-compatible APIs
-    // Groq API format: { model: "...", messages: [{ role: "user", content: "..." }] }
-    if (endpoint.includes('groq.com') || endpoint.includes('openai.com') || modelToUse) {
+    // If this is an OpenAI Images endpoint (DALL·E), the payload is NOT chat-completions.
+    if (endpoint.includes("/v1/images/generations")) {
       requestBody = {
-        model: modelToUse || 'llama-3.3-70b-versatile', // Default Groq model
-        messages: [
-          { role: 'user', content: prompt }
-        ]
+        // OpenAI supports: "dall-e-2", "dall-e-3" (and newer image models depending on account)
+        ...(modelToUse ? { model: modelToUse } : {}),
+        prompt: prompt,
+        n: 1,
+        size: "1024x1024",
+      };
+    } else if (endpoint.includes("groq.com") || endpoint.includes("openai.com") || modelToUse) {
+      // Default format for Groq/OpenAI-compatible chat-completions APIs
+      requestBody = {
+        model: modelToUse || "llama-3.3-70b-versatile", // Default Groq model
+        messages: [{ role: "user", content: prompt }],
       };
     } else {
       // Fallback simple format
-      requestBody = {
-        prompt: prompt,
-        ...(modelToUse && { model: modelToUse })
-      };
+      requestBody = { prompt: prompt, ...(modelToUse && { model: modelToUse }) };
     }
     console.log(`[callLLM] Using default request body:`, JSON.stringify(requestBody, null, 2));
   }
@@ -134,10 +138,12 @@ export const callLLM = async (tool, prompt) => {
       }
     }
 
-    // Try common response patterns
+    // Try common response patterns (chat + images)
     const output = response.data.output || 
                    response.data.text || 
                    response.data.content || 
+                   response.data.data?.[0]?.url ||
+                   response.data.data?.[0]?.b64_json ||
                    response.data.choices?.[0]?.message?.content ||
                    response.data.choices?.[0]?.text ||
                    response.data;
@@ -157,7 +163,8 @@ export const callLLM = async (tool, prompt) => {
                       error.response.data.message || 
                       error.response.data.error ||
                       error.message;
-      throw new Error(`API Error: ${errorMsg}`);
+      // Don't double-prefix "API Error:" — caller wraps it for UI.
+      throw new Error(errorMsg);
     }
     throw error;
   }
